@@ -1,0 +1,62 @@
+---
+- name: Despliegue de El Cerebro (Ollama Local Rootless)
+  hosts: localhost
+  gather_facts: false
+  vars:
+    # Puedes cambiarlo a 'llama3.2' si prefieres el modelo de Meta
+    ollama_model: "qwen2.5-coder:1.5b"
+    ollama_port: "11434"
+
+  tasks:
+    - name: Asegurar que la imagen de Ollama esté presente
+      containers.podman.podman_image:
+        name: docker.io/ollama/ollama
+        state: present
+
+    - name: Levantar contenedor de Ollama
+      containers.podman.podman_container:
+        name: ollama_brain
+        image: docker.io/ollama/ollama
+        state: started
+        ports:
+          - "{{ ollama_port }}:11434"
+        # Usamos un volumen para que no tengas que descargar el modelo
+        # en cada prueba si destruyes el contenedor accidentalmente
+        volumes:
+          - ollama_data:/root/.ollama
+
+    - name: Esperar a que la API local de Ollama esté lista y escuchando
+      ansible.builtin.uri:
+        url: "http://localhost:{{ ollama_port }}/api/tags"
+        method: GET
+        status_code: 200
+      register: _result
+      until: _result.status == 200
+      retries: 5
+      delay: 2
+
+    - name: "Descargar el modelo de IA: {{ ollama_model }} (Puede tomar un par de minutos)"
+      ansible.builtin.uri:
+        url: "http://localhost:{{ ollama_port }}/api/pull"
+        method: POST
+        body_format: json
+        body:
+          name: "{{ ollama_model }}"
+        timeout: 600  # Tiempo extendido por la descarga de los gigabytes
+      register: pull_result
+
+    - name: PRUEBA DE FUEGO - Enviar un prompt a tu IA local
+      ansible.builtin.uri:
+        url: "http://localhost:{{ ollama_port }}/api/generate"
+        method: POST
+        body_format: json
+        body:
+          model: "{{ ollama_model }}"
+          prompt: "Explica en una sola oración muy corta qué es un demonio systemd."
+          stream: false
+        timeout: 120
+      register: ai_test
+
+    - name: Mostrar el razonamiento del modelo local
+      ansible.builtin.debug:
+        msg: "El Cerebro responde: {{ ai_test.json.response }}"
