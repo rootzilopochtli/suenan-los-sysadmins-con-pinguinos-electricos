@@ -1,5 +1,5 @@
 ---
-- name: Despliegue de El Cerebro (Ollama Local Rootless)
+- name: Despliegue de Multivac (Ollama Local Rootless)
   hosts: localhost
   gather_facts: false
   vars:
@@ -65,4 +65,4 @@
 
     - name: Confirmación de despliegue exitoso
       ansible.builtin.debug:
-        msg: "✅ Cerebro operativo y validado. Respuesta: {{ ai_test.json.response }}"
+        msg: "✅ Multivac operativo y validado. Respuesta: {{ ai_test.json.response }}"
