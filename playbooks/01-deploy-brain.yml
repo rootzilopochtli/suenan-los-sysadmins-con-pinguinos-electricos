@@ -3,60 +3,66 @@
   hosts: localhost
   gather_facts: false
   vars:
-    # Puedes cambiarlo a 'llama3.2' si prefieres el modelo de Meta
     ollama_model: "qwen2.5-coder:1.5b"
     ollama_port: "11434"
+    work_dir: "{{ playbook_dir }}/ollama_data"
 
   tasks:
+    - name: Crear directorio local para los datos
+      ansible.builtin.file:
+        path: "{{ work_dir }}"
+        state: directory
+        mode: '0755'
+
     - name: Asegurar que la imagen de Ollama esté presente
       containers.podman.podman_image:
-        name: docker.io/ollama/ollama
+        name: docker.io/ollama/ollama:latest
         state: present
 
     - name: Levantar contenedor de Ollama
       containers.podman.podman_container:
         name: ollama_brain
-        image: docker.io/ollama/ollama
+        image: docker.io/ollama/ollama:latest
         state: started
+        userns: keep-id
+        security_opt:
+          - label=disable
         ports:
           - "{{ ollama_port }}:11434"
-        # Usamos un volumen para que no tengas que descargar el modelo
-        # en cada prueba si destruyes el contenedor accidentalmente
         volumes:
-          - ollama_data:/root/.ollama
+          - "{{ work_dir }}:/home/ollama:Z"
+        env:
+          OLLAMA_MODELS: "/home/ollama"
+          HOME: "/home/ollama"
 
-    - name: Esperar a que la API local de Ollama esté lista y escuchando
+    - name: Esperar a que la API esté lista
       ansible.builtin.uri:
         url: "http://localhost:{{ ollama_port }}/api/tags"
         method: GET
         status_code: 200
       register: _result
       until: _result.status == 200
-      retries: 5
-      delay: 2
+      retries: 20
+      delay: 5
 
-    - name: "Descargar el modelo de IA: {{ ollama_model }} (Puede tomar un par de minutos)"
-      ansible.builtin.uri:
-        url: "http://localhost:{{ ollama_port }}/api/pull"
-        method: POST
-        body_format: json
-        body:
-          name: "{{ ollama_model }}"
-        timeout: 600  # Tiempo extendido por la descarga de los gigabytes
-      register: pull_result
+    - name: Descargar modelo directamente dentro del contenedor
+      ansible.builtin.command:
+        cmd: "podman exec ollama_brain ollama pull {{ ollama_model }}"
+      changed_when: true
 
-    - name: PRUEBA DE FUEGO - Enviar un prompt a tu IA local
+    - name: PRUEBA DE FUEGO - Validar razonamiento del modelo
       ansible.builtin.uri:
         url: "http://localhost:{{ ollama_port }}/api/generate"
         method: POST
         body_format: json
         body:
           model: "{{ ollama_model }}"
-          prompt: "Explica en una sola oración muy corta qué es un demonio systemd."
+          prompt: "Explica en una oración qué es systemd."
           stream: false
         timeout: 120
       register: ai_test
+      failed_when: ai_test.status != 200
 
-    - name: Mostrar el razonamiento del modelo local
+    - name: Confirmación de despliegue exitoso
       ansible.builtin.debug:
-        msg: "El Cerebro responde: {{ ai_test.json.response }}"
+        msg: "✅ Cerebro operativo y validado. Respuesta: {{ ai_test.json.response }}"
