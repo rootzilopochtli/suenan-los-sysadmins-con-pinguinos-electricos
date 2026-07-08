@@ -48,7 +48,7 @@ El proyecto se divide en fases orquestadas por playbooks de Ansible.
 Este playbook descarga la imagen de Ollama, levanta el contenedor de Podman y descarga el modelo de IA base, dejándolo listo para recibir peticiones a través de una API REST local.
 
 ```
-$ ansible-playbook playbooks/01-deploy-brain.yml
+$ ansible-playbook playbooks/01-deploy-multivac.yml
 ```
 
 _(Más instrucciones de despliegue se agregarán conforme el proyecto avance)._
