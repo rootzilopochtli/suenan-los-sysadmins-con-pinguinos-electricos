@@ -3,9 +3,10 @@
 ![Status](https://img.shields.io/badge/status-en%20desarrollo-orange)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
-**Operaciones en Linux asistidas con IA (Soberanía y Automatización en el Edge)**
+**Tareas en Linux asistidas con IA (Soberanía y Automatización en el Edge)**
 
 > *"The best Linux engineers will not be replaced by AI, they will be the ones who know how to use it effectively."*
+>
 > — Ezequiel Lanza & Eduardo Spotti
 
 Repositorio oficial del proyecto y demostración técnica para **Posadev**. Este laboratorio es un caso práctico sobre cómo evolucionar la administración de sistemas en Linux: pasando de la automatización estática (el viejo y confiable `cron`) a la resolución dinámica de problemas con Inteligencia Artificial.
