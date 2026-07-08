@@ -22,6 +22,6 @@ El Pull Secret permite que el nodo de MicroShift descargue las imágenes de cont
 3. Guarda este archivo como `openshift-pull-secret` en `magrathea/playbooks` (donde residen los playbooks).
 
 ---
-⚠️ **Nota Técnica:** Sin estos tres elementos, el Daneel fallará al intentar habilitar los repositorios de MicroShift y Fast Datapath.
+⚠️ **Nota Técnica:** Sin estos tres elementos, Daneel fallará al intentar habilitar los repositorios de MicroShift y Fast Datapath.
 ---
 👤 **Alex (@rootzilopochtli)** *Technical Training Developer en Red Hat | Miembro de Fedora Project | Autor de "Fedora Linux System Administration"*
