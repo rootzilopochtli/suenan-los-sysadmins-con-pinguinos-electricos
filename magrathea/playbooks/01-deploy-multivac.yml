@@ -2,6 +2,7 @@
 - name: Despliegue de Multivac (Ollama Local Rootless)
   hosts: localhost
   gather_facts: false
+  become: false
   vars:
     ollama_model: "qwen2.5-coder:1.5b"
     ollama_port: "11434"
@@ -19,12 +20,17 @@
         name: docker.io/ollama/ollama:latest
         state: present
 
-    - name: Levantar contenedor de Ollama
+    - name: "Asegurar que exista el directorio de systemd del usuario"
+      ansible.builtin.file:
+        path: "{{ lookup('env', 'HOME') }}/.config/systemd/user"
+        state: directory
+        mode: '0755'
+
+    - name: Levantar contenedor de Ollama y generar servicio systemd
       containers.podman.podman_container:
         name: ollama_brain
         image: docker.io/ollama/ollama:latest
         state: started
-        userns: keep-id
         security_opt:
           - label=disable
         ports:
@@ -34,6 +40,21 @@
         env:
           OLLAMA_MODELS: "/home/ollama"
           HOME: "/home/ollama"
+        # Esto genera el archivo ~/.config/systemd/user/container-ollama_brain.service
+        generate_systemd:
+          path: "{{ lookup('env', 'HOME') }}/.config/systemd/user/"
+          restart_policy: always
+
+    - name: Habilitar e iniciar el servicio systemd del contenedor
+      ansible.builtin.systemd:
+        name: container-ollama_brain
+        scope: user
+        enabled: yes
+        state: started
+        daemon_reload: yes
+      environment:
+        # Extrae dinámicamente el UID del usuario que ejecuta el playbook
+        XDG_RUNTIME_DIR: "/run/user/{{ lookup('pipe', 'id -u') }}"
 
     - name: Esperar a que la API esté lista
       ansible.builtin.uri:
