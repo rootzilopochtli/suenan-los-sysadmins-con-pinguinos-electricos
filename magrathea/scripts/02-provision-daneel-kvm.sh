@@ -143,6 +143,6 @@ else
     echo "   ssh -i $PRIVATE_KEY $LAB_USER@$VM_IP"
     echo ""
     echo "2. Desplegar Daneel:"
-    echo "   ansible-playbook playbooks/02-deploy-daneel.yml -e \"target_env=local local_ip=$VM_IP local_key=$PRIVATE_KEY\""
+    echo "   ansible-playbook playbooks/02-deploy-daneel.yml -e \"local_ip=$VM_IP local_key=$PRIVATE_KEY\""
     echo "--------------------------------------------------------------------------"
 fi
