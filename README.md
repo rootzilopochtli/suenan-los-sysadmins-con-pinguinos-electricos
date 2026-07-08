@@ -15,7 +15,7 @@ Repositorio oficial del proyecto y laboratorio abierto sobre la evolución de la
 
 La administración de infraestructura genera toneladas de datos, logs y métricas. Enviar información sensible de servidores de producción a APIs de terceros (como OpenAI) suele violar las políticas de seguridad y cumplimiento.
 
-Este proyecto demuestra que **la soberanía tecnológica es posible**. Montamos un asistente de IA 100% local, efímero y seguro utilizando contenedores *rootless*, orquestado enteramente con Ansible. Porque recordar la regla de oro: *la limpieza también es trabajo del sysadmin.*
+Este proyecto demuestra que **la soberanía tecnológica es posible**. Montamos un asistente de IA 100% local, efímero y seguro utilizando contenedores *rootless*, orquestado enteramente con Ansible. Recordando la regla de oro: *la limpieza también es trabajo del sysadmin.*
 
 ## 🌌 Nomenclatura y Filosofía (Tributo a la Ciencia Ficción)
 
@@ -31,14 +31,20 @@ Este proyecto no solo explora el futuro de la infraestructura, sino que rinde ho
 
 1. **Multivac (IA Local):** Un modelo de lenguaje ligero (`qwen2.5-coder` o `llama3.2`) ejecutándose a través de **Ollama** dentro de un contenedor **Podman** sin privilegios. Cero basura en el host.
 2. **Daneel:** **Ansible** se encarga de crear el escenario, aprovisionar los servicios, y al finalizar, destruir todo rastro de la infraestructura.
-3. **Precogs:** Agentes ligeros (escritos en Python) que monitorean la carga de servicios (como Nginx) o cambios en archivos críticos (como `/etc`). Al detectar anomalías, consultan a la IA local para determinar la mejor acción de remediación.
+3. **Precogs:** Agentes ligeros (escritos en **Python**) que monitorean la carga de servicios (como Nginx) o cambios en archivos críticos (como `/etc`). Al detectar anomalías, consultan a la IA local para determinar la mejor acción de remediación.
 
 ## 🛠️ Requisitos Previos
+
+### 💻 Host
 
 * Sistema Operativo: Fedora Linux (o distribución compatible)
 * Podman instalado
 * Ansible y la colección de contenedores (`ansible-galaxy collection install containers.podman`)
 * Al menos 8GB - 16GB de RAM disponibles para la inferencia de la IA.
+
+### ☸️  Microshift
+
+🚧 _WIP_
 
 ## ⚙️ Uso / Despliegue
 
