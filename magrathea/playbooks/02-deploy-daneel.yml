@@ -1,0 +1,126 @@
+---
+# ##################################################################################################################
+# Autor: Alex (@rootzilopochtli)
+# Proyecto: PositronicOps / Operaciones Hail Mary
+# Uso: ansible-playbook playbooks/02-deploy-daneel.yml -e "local_ip=$IP local_key=$KEY"
+# ##################################################################################################################
+
+- name: Act 0 - Pre-flight Checks (Multivac Host)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    local_pull_secret: "{{ playbook_dir }}/openshift-pull-secret"
+  tasks:
+    - name: "Check: Validar Pull Secret"
+      stat:
+        path: "{{ local_pull_secret }}"
+      register: pull_secret_stat
+
+    - name: "Fail: Falta Pull Secret"
+      fail:
+        msg: "❌ ERROR: No se encontró 'openshift-pull-secret' en {{ playbook_dir }}."
+      when: not pull_secret_stat.stat.exists
+
+    - name: "Help: Validar parámetros de conexión"
+      fail:
+        msg: "🚀 Uso: ansible-playbook playbooks/02-deploy-daneel.yml -e \"local_ip=<IP> local_key=<LLAVE>\""
+      when: local_ip is not defined or local_key is not defined
+
+- name: Act 1 - Infrastructure Management
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: "Inventario: Registrar nodo Positronico (KVM)"
+      add_host:
+        name: "{{ local_ip }}"
+        groups: microshift_nodes
+        ansible_user: "positronic-user"
+        ansible_ssh_private_key_file: "{{ playbook_dir }}/../{{ local_key }}"
+
+- name: Act 2 - System Configuration and MicroShift Deployment
+  hosts: microshift_nodes
+  become: true
+  gather_facts: false
+  vars:
+    ocp_version: "4.21"
+    local_pull_secret: "{{ playbook_dir }}/openshift-pull-secret"
+    target_user: "positronic-user"
+    target_home: "/home/positronic-user"
+
+  tasks:
+    - name: "SSH: Esperar conectividad real"
+      wait_for_connection:
+        delay: 10
+        timeout: 120
+
+    - name: "Facts: Recolectar metadatos manualmente"
+      setup:
+
+    - name: "Repositorios: Habilitar canales de MicroShift"
+      rhsm_repository:
+        name:
+          - "rhocp-{{ ocp_version }}-for-rhel-9-x86_64-rpms"
+          - "fast-datapath-for-rhel-9-x86_64-rpms"
+        state: enabled
+
+    - name: "Software: Instalar MicroShift"
+      dnf:
+        name: [microshift, openshift-clients, firewalld]
+        state: present
+
+    - name: "Seguridad: Configurar Firewalld"
+      block:
+        - name: "Firewall: Asegurar servicio activo"
+          systemd:
+            name: firewalld
+            state: started
+            enabled: yes
+        - name: "Firewall: Abrir puertos requeridos"
+          ansible.posix.firewalld:
+            port: "{{ item }}"
+            permanent: yes
+            state: enabled
+            immediate: yes
+          loop: [22/tcp, 6443/tcp, 10250/tcp, 2379-2380/tcp, 80/tcp, 443/tcp]
+
+    - name: "Config: Inyectar Pull Secret"
+      copy:
+        src: "{{ local_pull_secret }}"
+        dest: /etc/crio/openshift-pull-secret
+        mode: '0600'
+
+    - name: "MicroShift: Certificados y Arranque"
+      block:
+        - name: "SAN: Configurar certificados con IP actual"
+          copy:
+            dest: /etc/microshift/config.yaml
+            content: |
+              apiServer:
+                subjectAltNames:
+                  - {{ inventory_hostname }}
+            mode: '0644'
+        - name: "MicroShift: Iniciar servicio"
+          systemd:
+            name: microshift
+            state: started
+            enabled: yes
+
+    - name: "Post-Config: Configurar Kubeconfig"
+      shell: |
+        mkdir -p {{ target_home }}/.kube
+        cp /var/lib/microshift/resources/kubeadmin/kubeconfig {{ target_home }}/.kube/config
+        chown -R {{ target_user }}:{{ target_user }} {{ target_home }}/.kube
+      args:
+        creates: "{{ target_home }}/.kube/config"
+
+    - name: "Summary: Reporte de Cierre"
+      debug:
+        msg:
+          - "##########################################################"
+          - "¡DANEEL HA PREPARADO EL NODO POSITRONICO EXITOSAMENTE!"
+          - "##########################################################"
+          - "NODO: {{ inventory_hostname }} | USUARIO: {{ target_user }}"
+          - "Siguiente paso: ./scripts/03-check-remote-daneel.sh"
+          - "##########################################################"

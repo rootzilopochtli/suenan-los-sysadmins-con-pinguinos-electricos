@@ -5,7 +5,7 @@
   vars:
     ollama_model: "qwen2.5-coder:1.5b"
     ollama_port: "11434"
-    work_dir: "{{ playbook_dir }}/ollama_data"
+    work_dir: "{{ playbook_dir }}/../ollama_data"
 
   tasks:
     - name: Crear directorio local para los datos
