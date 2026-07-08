@@ -26,6 +26,13 @@ Este proyecto no solo explora el futuro de la infraestructura, sino que rinde ho
 * **Daneel (El Orquestador):** Nuestros playbooks de Ansible. Inspirado en *R. Daneel Olivaw*, el robot asimoviano que, operando en las sombras y de forma imperceptible, orquesta la protección y el desarrollo de todo un sistema.
 * **PreCogs (Los Agentes):** Los scripts de monitoreo en Python. Tomados de *Minority Report* de Philip K. Dick, su función principal no es reaccionar a la caída del servidor, sino observar el contexto para predecir la anomalía (el "crimen") y alertar a Multivac antes de que el colapso ocurra.
 * **Operaciones Hail Mary (Disaster Recovery):** Protocolos de último recurso. En honor a la obra de Andy Weir, representan los scripts de restauración autónoma que se ejecutan cuando el sistema está en un estado crítico, aislado, y la intervención del SysAdmin es imposible.
+* **Magrathea (El Centro de Mando):** Nuestro directorio principal de aprovisionamiento (`/magrathea`). Al igual que la mítica constructora de planetas de Douglas Adams, es donde ensamblamos mundos (infraestructuras) de la nada, guiados por el principio del 42 (el asterisco `*` en ASCII, el comodín que permite crear cualquier cosa que el operador decida).
+* **Deckard (El Retiro):** Nuestro script de limpieza (Tear Down). Nombrado así por el legendario *Blade Runner*, su trabajo consiste en "retirar" implacablemente a los componentes, procesos y máquinas virtuales que ya han cumplido su ciclo de vida dentro del laboratorio.
+
+---
+
+> 💡 **Manual de Operaciones:** Para comenzar a construir la infraestructura, desplegar a Multivac y orquestar el nodo Positrónico, consulta las instrucciones detalladas de despliegue en: **[`magrathea/README.md`](magrathea/README.md)**.
+
 
 ## 🏗️ Arquitectura del Laboratorio
 
@@ -46,26 +53,16 @@ Este proyecto no solo explora el futuro de la infraestructura, sino que rinde ho
 
 🚧 _WIP_
 
-## ⚙️ Uso / Despliegue
+## 📜 Las Tres Leyes del SysAdmin
 
-El proyecto se divide en fases orquestadas por playbooks de Ansible.
+Inspiradas en las directivas asimovianas, la automatización y arquitectura de este laboratorio se rigen estrictamente por los siguientes principios operativos:
 
-### 1. Despertar a Multivac
-Este playbook descarga la imagen de Ollama, levanta el contenedor de Podman y descarga el modelo de IA base, dejándolo listo para recibir peticiones a través de una API REST local.
+1. **Primera Ley:** Un SysAdmin debe respaldar TODO el sistema, y validar el respaldo regularmente.
+2. **Segunda Ley:** Un SysAdmin debe dominar la línea de comandos, y evitar los gráficos, excepto si entra en conflicto con la Primera Ley.
+3. **Tercera Ley:** Un SysAdmin debe automatizar al máximo, para tener tiempo libre productivo, hasta donde este tiempo libre no entre en conflicto con la Primera o la Segunda Ley.
 
-```
-$ ansible-playbook playbooks/01-deploy-multivac.yml
-```
-
-_(Más instrucciones de despliegue se agregarán conforme el proyecto avance)._
-
-## 🧹 Limpieza (Tear Down)
-
-Como todo buen SysAdmin, dejamos el entorno tal como lo encontramos. Este playbook detiene y elimina los contenedores, limpiando todo el almacenamiento utilizado.
-
-```
-$ ansible-playbook playbooks/99-destroy-all.yml
-```
+---
+*Nota Legal y de Derechos de Autor: Todos los nombres, términos y referencias literarias o cinematográficas utilizadas en este repositorio (Multivac, Daneel, Magrathea, PreCogs, Deckard, Operaciones Hail Mary, etc.) son propiedad de sus respectivos autores y titulares de derechos (Isaac Asimov, Philip K. Dick, Douglas Adams, Andy Weir, etc.). Su uso en este laboratorio es estrictamente con fines de homenaje cultural y educativos, sin fines de lucro.*
 
 ## 📜 Licencia y Contacto
 Creado para la comunidad. Si rompes tu servidor de producción con esto, al menos la IA te explicará por qué falló.
