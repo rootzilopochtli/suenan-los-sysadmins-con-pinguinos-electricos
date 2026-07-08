@@ -27,7 +27,7 @@ Al seleccionar **Virtual Guest image**, serás redirigido al asistente (wizard) 
 Dentro de tu nuevo blueprint:
 1. Haz clic en **Build latest images**. El sistema iniciará la creación de la instancia en la infraestructura de Red Hat.
 2. Una vez que el estado cambie a "Listo", haz clic en el enlace **Download (.qcow2)**.
-3. **Crítico:** Guarda este archivo directamente en el directorio de trabajo de tu repositorio local para que el script de provisionamiento pueda detectarlo.
+3. **Crítico:** Guarda este archivo directamente dentro del directorio `magrathea/` de tu repositorio local para que el script de provisionamiento pueda detectarlo sin problemas.
 
 ---
 ## 🛡️ Siguiente Paso
