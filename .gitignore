@@ -1,0 +1,26 @@
+# Golden Images y Discos
+*.qcow2
+*.iso
+*.img
+
+# Llaves SSH y Certificados
+labkey
+labkey.pub
+*.pem
+*.cer
+*.crt
+*.key
+
+# Secretos
+openshift-pull-secret
+.env
+
+# Directorios de Datos (Multivac)
+ollama_data/
+!ollama_data/.gitkeep
+
+# Archivos de Ansible
+*.retry
+
+# Logs
+*.log
