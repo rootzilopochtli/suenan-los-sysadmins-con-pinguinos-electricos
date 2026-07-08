@@ -1,5 +1,8 @@
 # 🐧🤖 ¿Sueñan los SysAdmins con pingüinos eléctricos?
 
+![Status](https://img.shields.io/badge/status-en%20desarrollo-orange)
+![License](https://img.shields.io/badge/license-MIT-blue)
+
 **Operaciones en Linux asistidas con IA (Soberanía y Automatización en el Edge)**
 
 > *"The best Linux engineers will not be replaced by AI, they will be the ones who know how to use it effectively."*
