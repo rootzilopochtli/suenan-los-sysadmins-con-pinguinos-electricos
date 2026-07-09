@@ -1,3 +1,5 @@
+![La Guía del SysAdmin Galáctico para la Supervivencia en el Edge](assets/banner.png)
+
 # 🐧🤖 ¿Sueñan los SysAdmins con pingüinos eléctricos?
 
 ![Status](https://img.shields.io/badge/status-en%20desarrollo-orange)
@@ -28,30 +30,37 @@ Este proyecto no solo explora el futuro de la infraestructura, sino que rinde ho
 * **Operaciones Hail Mary (Disaster Recovery):** Protocolos de último recurso. En honor a la obra de Andy Weir, representan los scripts de restauración autónoma que se ejecutan cuando el sistema está en un estado crítico, aislado, y la intervención del SysAdmin es imposible.
 * **Magrathea (El Centro de Mando):** Nuestro directorio principal de aprovisionamiento (`/magrathea`). Al igual que la mítica constructora de planetas de Douglas Adams, es donde ensamblamos mundos (infraestructuras) de la nada, guiados por el principio del 42 (el asterisco `*` en ASCII, el comodín que permite crear cualquier cosa que el operador decida).
 * **Deckard (El Retiro):** Nuestro script de limpieza (Tear Down). Nombrado así por el legendario *Blade Runner*, su trabajo consiste en "retirar" implacablemente a los componentes, procesos y máquinas virtuales que ya han cumplido su ciclo de vida dentro del laboratorio.
+* **Gaia (El Balanceador):** Nuestra topología de proxy inverso y balanceo de carga (HAProxy + Nginx). En honor al planeta de la saga de la *Fundación* de Asimov, donde todas las entidades comparten una conciencia colectiva, enrutando y distribuyendo la carga de procesamiento de forma transparente y en perfecta armonía a través de todos sus nodos.
 
 ---
 
 > 💡 **Manual de Operaciones:** Para comenzar a construir la infraestructura, desplegar a Multivac y orquestar el nodo Positrónico, consulta las instrucciones detalladas de despliegue en: **[`magrathea/README.md`](magrathea/README.md)**.
 
-
 ## 🏗️ Arquitectura del Laboratorio
 
 1. **Multivac (IA Local):** Un modelo de lenguaje ligero (`qwen2.5-coder` o `llama3.2`) ejecutándose a través de **Ollama** dentro de un contenedor **Podman** sin privilegios. Cero basura en el host.
-2. **Daneel:** **Ansible** se encarga de crear el escenario, aprovisionar los servicios, y al finalizar, destruir todo rastro de la infraestructura.
-3. **Precogs:** Agentes ligeros (escritos en **Python**) que monitorean la carga de servicios (como Nginx) o cambios en archivos críticos (como `/etc`). Al detectar anomalías, consultan a la IA local para determinar la mejor acción de remediación.
+2. **Daneel (El Orquestador):** **Ansible** se encarga de crear el escenario, aprovisionar los servicios, y al finalizar, destruir todo rastro de la infraestructura.
+3. **Gaia (El Balanceador):** Topología de proxy inverso y balanceo de carga (HAProxy + Nginx) desplegada sobre el clúster. Actúa como la entidad central que distribuye el tráfico y la carga de procesamiento de forma transparente hacia los nodos.
+4. **Precogs (Los Agentes):** Agentes ligeros (escritos en **Python**) que monitorean la carga de servicios (como Nginx) o cambios en archivos críticos (como `/etc`). Al detectar anomalías, consultan a la IA local para determinar la mejor acción de remediación.
 
 ## 🛠️ Requisitos Previos
 
-### 💻 Host
+### 💻 Host (Centro de Mando)
 
-* Sistema Operativo: Fedora Linux (o distribución compatible)
-* Podman instalado
-* Ansible y la colección de contenedores (`ansible-galaxy collection install containers.podman`)
-* Al menos 8GB - 16GB de RAM disponibles para la inferencia de la IA.
+* Sistema Operativo: Fedora Linux (o distribución compatible).
+* Podman instalado.
+* Ansible y la colección de contenedores (`ansible-galaxy collection install containers.podman`).
+* Al menos 8 GB - 16 GB de RAM disponibles en el sistema para la inferencia fluida de la IA.
 
-### ☸️  Microshift
+### ☸️ MicroShift (Nodo Positrónico en KVM)
 
-🚧 _WIP_
+* Imagen Base: Red Hat Enterprise Linux (RHEL) 9 en formato `.qcow2` generada vía Image Builder.
+* Recursos Asignados: Mínimo **2 vCPUs** y **8 GB de RAM** dedicados exclusivamente para la máquina virtual.
+* Autenticación: Llaves SSH configuradas localmente y credenciales válidas de Red Hat Developers (Pull Secret y Activation Key).
+
+### 👁️ Precogs (Monitoreo Predictivo)
+
+* 🚧 _En desarrollo (WIP)_ - Próximamente requerirá un entorno virtual de Python 3.x con dependencias de red y automatización.
 
 ## 📜 Las Tres Leyes del SysAdmin
 
