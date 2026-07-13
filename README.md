@@ -31,6 +31,7 @@ Este proyecto no solo explora el futuro de la infraestructura, sino que rinde ho
 * **Magrathea (El Centro de Mando):** Nuestro directorio principal de aprovisionamiento (`/magrathea`). Al igual que la mítica constructora de planetas de Douglas Adams, es donde ensamblamos mundos (infraestructuras) de la nada, guiados por el principio del 42 (el asterisco `*` en ASCII, el comodín que permite crear cualquier cosa que el operador decida).
 * **Deckard (El Retiro):** Nuestro script de limpieza (Tear Down). Nombrado así por el legendario *Blade Runner*, su trabajo consiste en "retirar" implacablemente a los componentes, procesos y máquinas virtuales que ya han cumplido su ciclo de vida dentro del laboratorio.
 * **Gaia (El Balanceador):** Nuestra topología de proxy inverso y balanceo de carga (HAProxy + Nginx). En honor al planeta de la saga de la *Fundación* de Asimov, donde todas las entidades comparten una conciencia colectiva, enrutando y distribuyendo la carga de procesamiento de forma transparente y en perfecta armonía a través de todos sus nodos.
+* **Andrew (El Asistente):** Nuestro bot de ChatOps basado en Telegram. Nombrado en honor al androide protagonista de *El Hombre Bicentenario* de Asimov, cuyo propósito era servir e interactuar de forma natural con los humanos. Andrew es la interfaz móvil conversacional que traduce la complejidad del clúster a un chat simple, permitiendo operar la infraestructura desde cualquier lugar.
 
 ---
 
@@ -42,6 +43,7 @@ Este proyecto no solo explora el futuro de la infraestructura, sino que rinde ho
 2. **Daneel (El Orquestador):** **Ansible** se encarga de crear el escenario, aprovisionar los servicios, y al finalizar, destruir todo rastro de la infraestructura.
 3. **Gaia (El Balanceador):** Topología de proxy inverso y balanceo de carga (HAProxy + Nginx) desplegada sobre el clúster. Actúa como la entidad central que distribuye el tráfico y la carga de procesamiento de forma transparente hacia los nodos.
 4. **Precogs (Los Agentes):** Agentes ligeros (escritos en **Python**) que monitorean la carga de servicios (como Nginx) o cambios en archivos críticos (como `/etc`). Al detectar anomalías, consultan a la IA local para determinar la mejor acción de remediación.
+5. **Andrew (ChatOps):** Interfaz móvil implementada como un bot de Telegram. Actúa como el puente de comunicación: recibe las alertas de los **Precogs**, consulta a **Multivac** para obtener diagnósticos y te envía notificaciones asíncronas a tu teléfono. Permite la ejecución remota ("Zero-Touch") de tareas de remediación mediante simples comandos de chat.
 
 ## 🛠️ Requisitos Previos
 
