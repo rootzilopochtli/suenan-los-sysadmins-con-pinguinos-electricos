@@ -1,4 +1,10 @@
 ---
+# ##################################################################################################################
+# Autor: Alex (@rootzilopochtli)
+# Proyecto: PositronicOps / Multivac (Brain)
+# Uso: ansible-playbook playbooks/01-deploy-multivac.yml
+# ##################################################################################################################
+
 - name: Despliegue de Multivac (Ollama Local Rootless)
   hosts: localhost
   gather_facts: false
