@@ -24,3 +24,13 @@ ollama_data/
 
 # Logs
 *.log
+
+# Artefactos de contenedores exportados
+*.tar
+
+# Entornos virtuales y caché de Python (para cuando usemos Locust/Precogs)
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
