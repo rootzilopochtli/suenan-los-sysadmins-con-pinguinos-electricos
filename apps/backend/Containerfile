@@ -1,0 +1,24 @@
+# Usar una imagen oficial de Python ligera
+FROM docker.io/python:3.9-slim
+
+# Establecer el directorio de trabajo
+WORKDIR /app
+
+# No ejecutar como root
+RUN useradd -m positronic_app && chown -R positronic_app /app
+
+# Copiar dependencias e instalar
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiar el código fuente
+COPY main.py .
+
+# Cambiar al usuario sin privilegios
+USER positronic_app
+
+# Exponer el puerto de FastAPI
+EXPOSE 8000
+
+# Comando de arranque
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
