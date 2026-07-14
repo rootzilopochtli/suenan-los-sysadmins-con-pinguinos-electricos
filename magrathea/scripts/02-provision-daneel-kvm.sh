@@ -105,7 +105,8 @@ sudo virt-install \
     --name "$VM_NAME" \
     --memory 8196 \
     --vcpus 2 \
-    --disk "$KVM_DIR/$TARGET_IMG" \
+    --disk "$KVM_DIR/$TARGET_IMG",bus=virtio,target=vda,boot_order=1 \
+    --disk size=10,format=qcow2,bus=virtio,target=vdb \
     --import \
     --osinfo rhel9.0 \
     --noautoconsole
@@ -135,6 +136,14 @@ if [ -z "$VM_IP" ]; then
 else
     # Extraemos la ruta de la llave privada (quitando .pub)
     PRIVATE_KEY="${SSH_PUB_KEY%.pub}"
+
+        # --- NUEVO BLOQUE: Inyección de DNS Local ---
+    echo "🌐 Actualizando /etc/hosts con el dominio de Gaia..."
+    # 1. Eliminamos cualquier registro anterior (limpieza preventiva)
+    sudo sed -i '/gaia\.positronic\.local/d' /etc/hosts
+    # 2. Inyectamos la IP actual
+    echo "$VM_IP   gaia.positronic.local # PositronicOps" | sudo tee -a /etc/hosts > /dev/null
+    # --------------------------------------------
 
     echo "--------------------------------------------------------------------------"
     echo "🚀 Listo para el siguiente paso."

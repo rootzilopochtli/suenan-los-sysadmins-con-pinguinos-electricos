@@ -65,6 +65,46 @@
           - "fast-datapath-for-rhel-9-x86_64-rpms"
         state: enabled
 
+    - name: 💾 Preparar Storage Dedicado para Términus (Base de Datos)
+      block:
+        # --- NUEVA TASK: Cimiento para las herramientas de LVM ---
+        - name: Instalar herramientas de LVM (lvm2)
+          dnf:
+            name: lvm2
+            state: present
+
+        - name: Crear Volume Group (vg_data) en el segundo disco
+          community.general.lvg:
+            vg: vg_data
+            pvs: /dev/vdb
+
+        - name: Crear Logical Volume para Términus
+          community.general.lvol:
+            vg: vg_data
+            lv: lv_terminus
+            size: 100%FREE
+
+        - name: Formatear volumen en XFS
+          community.general.filesystem:
+            fstype: xfs
+            dev: /dev/vg_data/lv_terminus
+
+        - name: Montar volumen dedicado de forma persistente
+          ansible.posix.mount:
+            path: /var/lib/terminus-data
+            src: /dev/vg_data/lv_terminus
+            fstype: xfs
+            state: mounted
+
+        - name: Ajustar permisos y contexto SELinux para contenedores
+          ansible.builtin.file:
+            path: /var/lib/terminus-data
+            state: directory
+            owner: "26"    # UID del usuario postgres en RHEL/UBI
+            group: "26"
+            mode: '0775'
+            setype: container_file_t # <-- ¡La magia que soluciona el permiso denegado!
+
     - name: "Software: Instalar MicroShift"
       dnf:
         name: [microshift, openshift-clients, firewalld]
