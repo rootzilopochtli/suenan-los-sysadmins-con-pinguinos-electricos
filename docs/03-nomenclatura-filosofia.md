@@ -1,6 +1,6 @@
 ## 🌌 Nomenclatura y Filosofía (Tributo a la Ciencia Ficción)
 
-![Banner Conceptual de Nomenclatura y Lore de PositronicOps](assets/lore-banner.png)
+![Banner Conceptual de Nomenclatura y Lore de PositronicOps](../assets/lore-banner.png)
 
 Este proyecto no solo explora el futuro de la infraestructura, sino que rinde homenaje a las obras fundacionales de la ciencia ficción que moldearon nuestra visión de la inteligencia artificial. Para despertar la curiosidad y contextualizar los componentes, hemos adoptado la siguiente nomenclatura:
 
