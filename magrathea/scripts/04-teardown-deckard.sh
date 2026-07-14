@@ -62,6 +62,17 @@ else
     echo -e "${GREEN}[OK] No hay kubeconfig residual.${NC}"
 fi
 
+# --- NUEVO BLOQUE: Limpieza de DNS Local ---
+echo -e "\n${YELLOW}== Fase 4: Limpiando DNS Local (/etc/hosts) ==${NC}"
+if grep -q "gaia.positronic.local" /etc/hosts; then
+    echo -e "Retirando el dominio gaia.positronic.local..."
+    sudo sed -i '/gaia\.positronic\.local/d' /etc/hosts
+    echo -e "${GREEN}[OK] Archivo /etc/hosts restaurado.${NC}"
+else
+    echo -e "${GREEN}[OK] No hay registros DNS residuales.${NC}"
+fi
+# -------------------------------------------
+
 echo -e "\n${GREEN}##########################################################${NC}"
 echo -e "${GREEN}#   RETIRO COMPLETADO: El entorno está limpio.           #${NC}"
 echo -e "${GREEN}##########################################################${NC}"

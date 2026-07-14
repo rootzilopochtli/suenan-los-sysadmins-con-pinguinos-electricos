@@ -36,9 +36,44 @@ Daneel (Ansible) entra en acción para instalar y configurar MicroShift en la m�
 $ ansible-playbook playbooks/02-deploy-daneel.yml -e "local_ip=<TU_IP> local_key=<TU_LLAVE>"
 ```
 
-### 4. El Retiro (Tear Down)
+### 4. Desplegar la Carga de Trabajo (Gaia)
 
-Cuando el laboratorio termina, Deckard se encarga de limpiar el entorno de forma segura, eliminando la máquina virtual de KVM y manteniendo el host impoluto.
+Una vez que MicroShift está operando, desplegaremos la arquitectura de 4 capas simulando un entorno *Airgap* (sin depender de registros de contenedores externos).
+
+**Paso Cero: Construir la imagen local de la API**
+
+*(Este paso solo se ejecuta la primera vez, o si modificas el código en `app/backend/main.py`).*
+
+```bash
+$ cd ../app/backend/
+$ podman build -t localhost/gaia-backend:v1 .
+$ podman save -o gaia-backend.tar localhost/gaia-backend:v1
+$ cd ../../magrathea/
+```
+
+**Paso Uno: Inyectar la imagen al Nodo Positrónico**
+
+Transferimos el artefacto al almacenamiento nativo del nodo:
+
+```bash
+$ scp -i ../labkey ../../app/backend/gaia-backend.tar positronic-user@<TU_IP>:~
+$ ssh -i ../labkey positronic-user@<TU_IP> "sudo podman load -i gaia-backend.tar"
+```
+
+**Paso Dos: Levantar la topología (de adentro hacia afuera)**
+
+```bash
+$ oc apply -f manifests/gaia/01-db-postgres.yml      # Capa 4: Persistencia (Términus)
+$ oc apply -f manifests/gaia/02-backend-fastapi.yml  # Capa 3: Lógica y Procesamiento (FastAPI)
+$ oc apply -f manifests/gaia/03-frontend-nginx.yml   # Capa 2: Proxy Inverso y Dashboard (Nginx)
+$ oc apply -f manifests/gaia/04-ingress-route.yml    # Capa 1: Enrutamiento Edge (HAProxy)
+```
+
+Al finalizar, puedes validar que el ecosistema está en perfecta sincronía navegando a \http://gaia.positronic.local (asegúrate de que los scripts hayan inyectado la IP correctamente en tu `/etc/hosts` local).
+
+### 5. El Retiro (Tear Down)
+
+Cuando el laboratorio termina, Deckard se encarga de limpiar el entorno de forma segura, eliminando la máquina virtual, purgando los registros DNS locales y manteniendo el host impoluto.
 
 ```bash
 $ ./scripts/04-teardown-deckard.sh
