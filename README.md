@@ -38,8 +38,9 @@ Dado que nuestro universo de herramientas ha crecido orgánicamente para cubrir 
 1. **Multivac (IA Local):** Un modelo de lenguaje ligero (`qwen2.5-coder` o `llama3.2`) ejecutándose a través de **Ollama** dentro de un contenedor **Podman** sin privilegios. Cero basura en el host.
 2. **Daneel (El Orquestador):** **Ansible** se encarga de crear el escenario, aprovisionar los servicios, y al finalizar, destruir todo rastro de la infraestructura.
 3. **Gaia (El Balanceador):** Topología de proxy inverso y balanceo de carga (HAProxy + Nginx) desplegada sobre el clúster. Actúa como la entidad central que distribuye el tráfico y la carga de procesamiento de forma transparente hacia los nodos.
-4. **Precogs (Los Agentes):** Agentes ligeros (escritos en **Python**) que monitorean la carga de servicios (como Nginx) o cambios en archivos críticos (como `/etc`). Al detectar anomalías, consultan a la IA local para determinar la mejor acción de remediación.
-5. **Andrew (ChatOps):** Interfaz móvil implementada como un bot de Telegram. Actúa como el puente de comunicación: recibe las alertas de los **Precogs**, consulta a **Multivac** para obtener diagnósticos y te envía notificaciones asíncronas a tu teléfono. Permite la ejecución remota ("Zero-Touch") de tareas de remediación mediante simples comandos de chat.
+4. **Términus (La Base de Datos):** Un clúster de **PostgreSQL** desplegado nativamente como un *StatefulSet* dentro de MicroShift. Utiliza volúmenes lógicos (LVM) dedicados directamente en el disco del nodo físico para asegurar operaciones de I/O de alto rendimiento y garantizar la soberanía, aislamiento y persistencia absoluta de los datos en el Edge.
+5. **Precogs (Los Agentes):** Agentes ligeros (escritos en **Python**) que monitorean la carga de servicios (como Nginx) o cambios en archivos críticos (como `/etc`). Al detectar anomalías, consultan a la IA local para determinar la mejor acción de remediación.
+6. **Andrew (ChatOps):** Interfaz móvil implementada como un bot de Telegram. Actúa como el puente de comunicación: recibe las alertas de los **Precogs**, consulta a **Multivac** para obtener diagnósticos y te envía notificaciones asíncronas a tu teléfono. Permite la ejecución remota ("Zero-Touch") de tareas de remediación mediante simples comandos de chat.
 
 ## 🛠️ Requisitos Previos
 
