@@ -69,7 +69,7 @@ $ oc apply -f manifests/gaia/03-frontend-nginx.yml   # Capa 2: Proxy Inverso y D
 $ oc apply -f manifests/gaia/04-ingress-route.yml    # Capa 1: Enrutamiento Edge (HAProxy)
 ```
 
-Al finalizar, puedes validar que el ecosistema está en perfecta sincronía navegando a \http://gaia.positronic.local (asegúrate de que los scripts hayan inyectado la IP correctamente en tu `/etc/hosts` local).
+Al finalizar, puedes validar que el ecosistema está en perfecta sincronía navegando a `http://gaia.positronic.local` (asegúrate de que los scripts hayan inyectado la IP correctamente en tu `/etc/hosts` local).
 
 ### 5. El Retiro (Tear Down)
 
