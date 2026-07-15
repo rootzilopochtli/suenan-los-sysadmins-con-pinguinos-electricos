@@ -43,6 +43,11 @@ Dado que nuestro universo de herramientas ha crecido orgánicamente para cubrir 
 6. **Andrew (ChatOps):** Interfaz móvil implementada como un bot de Telegram. Actúa como el puente de comunicación: recibe las alertas de los **Precogs**, consulta a **Multivac** para obtener diagnósticos y te envía notificaciones asíncronas a tu teléfono. Permite la ejecución remota ("Zero-Touch") de tareas de remediación mediante simples comandos de chat.
 7. **El Mulo (Chaos Engineering):** Un agente de asalto de carga pesada implementado con **Locust** en Python. Su función no es operativa, sino destructiva: simula escenarios de crisis inyectando cientos de miles de peticiones HTTP simultáneas hacia la Capa 1. Esto nos permite establecer una línea base de estrés (Baseline) para evaluar la resiliencia del stack tradicional ante cuellos de botella severos, descriptores de archivos saturados y fallas en cascada (`502/504 Bad Gateways`).
 
+---
+
+> 🛑 **Pruebas de Estrés:** Para colapsar el sistema bajo asedio, consulta las instrucciones detalladas del Chaos Engineering en: **[`chaos/README.md`](chaos/README.md)**.
+
+
 ## 🛠️ Requisitos Previos
 
 ### 💻 Host (Centro de Mando)
