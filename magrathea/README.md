@@ -71,6 +71,8 @@ $ oc apply -f manifests/gaia/04-ingress-route.yml    # Capa 1: Enrutamiento Edge
 
 Al finalizar, puedes validar que el ecosistema está en perfecta sincronía navegando a `http://gaia.positronic.local` (asegúrate de que los scripts hayan inyectado la IP correctamente en tu `/etc/hosts` local).
 
+![Gaia Command Center](../assets/gaia.positronic.local.png)
+
 ### 5. El Retiro (Tear Down)
 
 Cuando el laboratorio termina, Deckard se encarga de limpiar el entorno de forma segura, eliminando la máquina virtual, purgando los registros DNS locales y manteniendo el host impoluto.
@@ -78,6 +80,31 @@ Cuando el laboratorio termina, Deckard se encarga de limpiar el entorno de forma
 ```bash
 $ ./scripts/04-teardown-deckard.sh
 ```
+
+## 🌌 Arquitectura del Proyecto (PositronicOps)
+
+Este laboratorio despliega la aplicación **Gaia**, una arquitectura moderna de tres capas compuesta por una base de datos PostgreSQL, un backend de API REST (FastAPI) y un frontend (Nginx) expuesto mediante Ingress. Todo el ecosistema está diseñado para operar en entornos de recursos limitados (Edge Computing) utilizando **MicroShift**.
+
+```mermaid
+graph TD
+    subgraph "MicroShift (positronic-node)"
+        direction TB
+        I[Ingress Route<br/>gaia.positronic.local] --> F[Gaia Frontend<br/>Nginx]
+
+        subgraph "Deployment: gaia-backend"
+            F --> B1[FastAPI Pod 1]
+            F --> B2[FastAPI Pod N...]
+        end
+
+        B1 --> D[(PostgreSQL<br/>Database)]
+        B2 --> D
+    end
+```
+
+Para asegurar la resiliencia y demostrar las capacidades de una infraestructura verdaderamente autónoma (AIOps), el proyecto se divide en módulos especializados, documentados en sus respectivos directorios:
+
+* 💥 **[/chaos](../chaos):** Contiene a **El Mulo**, nuestro agente de estrés automatizado basado en Locust, diseñado para simular ataques DDoS y llevar al clúster a su límite operativo.
+* 👁️ **[/precogs](../precogs):** Alberga nuestro sistema nervioso central de operaciones. Aquí viven **Agatha** (nuestro agente de observabilidad predictiva que caza anomalías en los logs) y **Andrew** (nuestro bot de ChatOps en Telegram), quienes trabajan en conjunto con un LLM local (Multivac) para ejecutar auto-remediación táctica sin intervención humana.
 
 ---
 👤 **Alex (@rootzilopochtli)** *Technical Training Developer en Red Hat | Miembro de Fedora Project | Autor de "Fedora Linux System Administration"*
