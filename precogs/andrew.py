@@ -1,9 +1,15 @@
 import telebot
+import os
 
-# Credenciales de acceso (El Alma de Andrew)
-TOKEN = "8510896714:AAHGU9_ugP5z8K5G3QdNSrBWWj5JugFwIec"
-ADMIN_CHAT_ID = "19320644"
+# Credenciales extraídas de forma segura del entorno
+TOKEN = os.getenv("TELEGRAM_TOKEN")
+ADMIN_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
+if not TOKEN or not ADMIN_CHAT_ID:
+    print("❌ [Andrew] Error Fatal: Credenciales no encontradas en el entorno.")
+    exit(1)
+
+# ... (el resto del código se mantiene igual)
 bot = telebot.TeleBot(TOKEN)
 
 def notificar(mensaje):
