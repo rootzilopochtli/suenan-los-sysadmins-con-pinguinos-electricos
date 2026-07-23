@@ -63,9 +63,11 @@ Dado que nuestro universo de herramientas ha crecido orgánicamente para cubrir 
 * Recursos Asignados: Mínimo **2 vCPUs** y **8 GB de RAM** dedicados exclusivamente para la máquina virtual.
 * Autenticación: Llaves SSH configuradas localmente y credenciales válidas de Red Hat Developers (Pull Secret y Activation Key).
 
-### 👁️ Precogs (Monitoreo Predictivo)
+### 👁️ Precogs (Monitoreo Predictivo y ChatOps)
 
-* 🚧 _En desarrollo (WIP)_ - Próximamente requerirá un entorno virtual de Python 3.x con dependencias de red y automatización.
+* **Entorno Virtual (Python 3.x)**: El sistema nervioso comparte el entorno virtual (`venv`) configurado en la sección de Ingeniería del Caos.
+* **Dependencias de Comunicación**: Requiere el paquete `pyTelegramBotAPI` instalado en el entorno virtual para la orquestación de mensajes.
+* **Credenciales de Telegram**: Es indispensable contar con un Token de API (generado vía `@BotFather`) y un ID de usuario administrador para darle voz y seguridad a **Andrew**.
 
 ## 📜 Las Tres Leyes del SysAdmin
 
