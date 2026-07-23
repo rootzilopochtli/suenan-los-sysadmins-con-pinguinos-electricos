@@ -1,10 +1,10 @@
-# ⚔️ El Mulo: Chaos Engineering y Pruebas de Estrés
+# ⚔️  El Mulo: Chaos Engineering y Pruebas de Estrés
 
 En el universo de la *Fundación*, El Mulo es una anomalía impredecible que hace colapsar el sistema perfectamente planeado por la humanidad. En nuestro laboratorio, `el_mulo.py` es un script de **Locust** diseñado para asediar la infraestructura de Gaia y Términus hasta su punto de quiebre.
 
 El objetivo de este directorio es establecer una **Línea Base (Baseline)** del comportamiento de la infraestructura tradicional *antes* de introducir a los agentes de IA (Precogs).
 
-## 🚀 Cómo lanzar el Asedio
+## ⚙️  Preparación del Armamento
 
 Para aislar las dependencias y no ensuciar el host, ejecutamos Locust dentro de un entorno virtual de Python.
 
@@ -15,19 +15,43 @@ $ python3 -m venv venv
 $ source venv/bin/activate
 ```
 
-2. Instalar dependencias
+2. Instalar dependencias destructivas
 
 ```bash
 $ pip install locust
 ```
 
-3. Desatar a El Mulo
+## 🚀 Iniciando la Incursión Multiversal
+
+Para despertar a El Mulo y levantar el centro de mando táctico en tu host local, ejecuta:
 
 ```bash
 $ locust -f el_mulo.py
 ```
 
-Abre tu navegador en `http://localhost:8089`, configura miles de usuarios concurrentes apuntando a `http://gaia.positronic.local` y observa el colapso.
+### Configuración del Ataque (Evento Nexus)
+
+Abre tu navegador en http://localhost:8089. Para disparar las visiones de Agatha y obligar a la IA a intervenir, configura tu ejército de variantes con los siguientes parámetros:
+
+- Number of users (peak concurrency): **10000** (Ejército de variantes)
+
+- Ramp up (users started/second): **1000** (Tasa de invasión por segundo)
+
+- Host: `http://gaia.positronic.local` (El universo objetivo)
+
+![Evento Nexus](../assets/locust.png)
+
+Haz clic en **Start swarming** para abrir el multiverso.
+
+## 📈 Monitoreo del Colapso
+
+Dirígete a la pestaña **Charts** en la interfaz de Locust. En cuestión de segundos, la línea verde (Total Requests per Second) escalará agresivamente.
+
+Cuando los recursos del clúster lleguen a su límite de estrangulamiento, la gráfica roja (_Failures/s_) comenzará a ascender sin piedad.
+Nginx empezará a escupir códigos `499` y `50x`, indicando que la infraestructura está cediendo.
+Es en este preciso momento de asfixia cuando nuestros agentes en `/precogs` deberán entrar en acción para salvar la realidad.
+
+![El Colapso](../assets/colapso.png)
 
 ## 📊 Baseline: El Colapso de la Infraestructura Tradicional
 
