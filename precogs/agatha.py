@@ -5,6 +5,7 @@ import sys
 import os
 import requests
 import json
+import andrew
 
 # URL local donde Multivac (Ollama) está escuchando
 MULTIVAC_URL = "http://localhost:11434/api/generate"
@@ -85,26 +86,47 @@ def vision_precognitiva():
                 if error_count >= threshold:
                     print("\n🚨 [CRÍTICO] ¡PRE-CRIMEN DETECTADO! Agatha predice un colapso inminente en el Ingress.")
 
+                    # Que Andrew te avise inmediatamente a tu celular
+                    andrew.notificar("🚨 *¡PRE-CRIMEN DETECTADO!* Agatha predice un colapso por alta concurrencia (499/50x) en `gaia-frontend`. Solicitando directivas a Multivac...")
+
+                    contexto = "\n".join(historial_errores)
+
                     # Convertimos la lista de errores en un string para el prompt
                     contexto = "\n".join(historial_errores)
                     comando = solicitar_remediacion_multivac(contexto)
 
                     if comando:
-                        # Limpiamos el ruido de Markdown
-                        comando_limpio = comando.replace("```bash", "").replace("```", "").strip()
+                        # 1. Limpieza Extrema: Quitamos bash, sh, y TODO tipo de comillas inversas
+                        comando_limpio = comando.replace("```bash", "").replace("```sh", "").replace("```", "").replace("`", "").strip()
+
+                        # Si Multivac mete un salto de línea (ej. sh\noc scale...), tomamos solo la línea que empieza con 'oc'
+                        for linea in comando_limpio.split('\n'):
+                            if linea.strip().startswith('oc'):
+                                comando_limpio = linea.strip()
+                                break
 
                         print(f"⚡ [Auto-Remediación] Ejecutando: {comando_limpio}")
                         try:
-                            # Ejecutamos solo la parte limpia
                             subprocess.run(comando_limpio.split(), check=True)
                             print("✅ [Remediación] Escalado aplicado exitosamente.")
+
+                            # Que Andrew te confirme el éxito
+                            andrew.notificar(f"✅ *Auto-Remediación Exitosa*\nMultivac ordenó: `{comando_limpio}`\nEl clúster está estabilizándose.")
+
                         except subprocess.CalledProcessError as e:
                             print(f"❌ [Error] La remediación falló: {e}")
+                            andrew.notificar(f"❌ *Fallo de Remediación*\nComando fallido: `{comando_limpio}`\nSe requiere intervención humana inmediata.")
+                        except FileNotFoundError as e:
+                            print(f"❌ [Error Fatal] Sintaxis sucia desde Multivac: {e}")
+                            andrew.notificar(f"❌ *Error de Sintaxis IA*\nMultivac alucinó el formato. Comando detectado: `{comando_limpio}`")
 
-                    print("\n🔮 [Agatha] Enfriando sistema y reanudando visión...")
+                    # 2. El Periodo de Gracia (Cooldown)
+                    print("\n⏳ [Agatha] Entrando en periodo de gracia (60 segundos) para permitir la estabilización de los pods...")
+                    time.sleep(60) # Le damos 1 minuto a Kubernetes para levantar las réplicas
+
+                    print("🔮 [Agatha] Reanudando visión...")
                     error_count = 0
                     historial_errores = [] # Limpiamos el historial
-                    time.sleep(10) # Damos tiempo a que la remediación surta efecto
 
             elif DEBUG:
                 continue
