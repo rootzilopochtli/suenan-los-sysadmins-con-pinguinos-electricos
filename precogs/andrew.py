@@ -1,5 +1,9 @@
 import telebot
 import os
+from dotenv import load_dotenv
+
+# Esto busca el archivo .env y lo inyecta en el sistema operativo virtualmente
+load_dotenv()
 
 # Credenciales extraídas de forma segura del entorno
 TOKEN = os.getenv("TELEGRAM_TOKEN")
