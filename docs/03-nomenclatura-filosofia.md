@@ -24,6 +24,9 @@ Este proyecto no solo explora el futuro de la infraestructura, sino que rinde ho
 * **Multivac (El Cerebro):**
   * **Ubicación:** Motor de IA local (Ollama) ejecutándose en contenedores *rootless* dentro del host físico.
   * **El Porqué:** Nombrada en honor a la supercomputadora oracular (presente en relatos como *La última pregunta*), a la cual la humanidad consulta cuando la lógica lineal y estática no es suficiente para resolver un problema.
+* **Calvin-Node (El Host Administrativo):**
+  * **Ubicación:** El servidor o máquina virtual principal donde residen las herramientas de control, el Templo y el LLM (`calvin-node`).
+  * **El Porqué:** Bautizado en honor a la Dra. Susan Calvin, la legendaria Robopsicóloga en Jefe de *U.S. Robots and Mechanical Men*. En las historias de Asimov, ella es quien mejor comprende la lógica (y los fallos) de los cerebros positrónicos. En nuestro laboratorio, `calvin-node` es el entorno que aloja, observa y gobierna el comportamiento de la IA (Multivac) y de los agentes (Precogs), asegurando que mantengan la "cordura" de la infraestructura.
 * **Daneel (El Orquestador):**
   * **Ubicación:** Playbooks de aprovisionamiento en `/magrathea` (Ansible).
   * **El Porqué:** Inspirado en el legendario *R. Daneel Olivaw*, el robot que opera en las sombras y de forma imperceptible para orquestar la protección y el desarrollo de todo un sistema a gran escala.
