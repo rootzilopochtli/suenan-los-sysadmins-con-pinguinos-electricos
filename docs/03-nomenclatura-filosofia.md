@@ -2,20 +2,69 @@
 
 ![Banner Conceptual de Nomenclatura y Lore de PositronicOps](../assets/lore-banner.png)
 
-Este proyecto no solo explora el futuro de la infraestructura, sino que rinde homenaje a las obras fundacionales de la ciencia ficción que moldearon nuestra visión de la inteligencia artificial. Para despertar la curiosidad y contextualizar los componentes, hemos adoptado la siguiente nomenclatura:
+Este proyecto no solo explora el futuro de la infraestructura, sino que rinde homenaje a las obras fundacionales de la ciencia ficción que moldearon nuestra visión de la inteligencia artificial. Para despertar la curiosidad y contextualizar los componentes, hemos organizado nuestra nomenclatura por autor y obra:
 
-* **PositronicOps (El Concepto):** La evolución natural de DevOps y AIOps. Un guiño a los cerebros positrónicos de Isaac Asimov, donde la infraestructura no solo ejecuta, sino que deduce, protege y remedia siguiendo sus propias directivas.
-* **Multivac (El Cerebro):** Nuestro motor de IA local (Ollama). Nombrada en honor a la supercomputadora oracular de Asimov (presente en relatos como *La última pregunta*), a la cual la humanidad consulta cuando la lógica lineal y estática no es suficiente.
-* **Daneel (El Orquestador):** Nuestros playbooks de Ansible. Inspirado en *R. Daneel Olivaw*, el robot asimoviano que, operando en las sombras y de forma imperceptible, orquesta la protección y el desarrollo de todo un sistema.
-* **El Mulo (El Agente de Estrés):** Nuestro script de inyección de caos y pruebas de carga masiva (`locustfile.py` / `el_mulo.py`). En la saga de la *Fundación* de Asimov, El Mulo es un mutante impredecible capaz de alterar las emociones y el comportamiento de poblaciones enteras, llevando al colapso el plan perfecto y estático de Hari Seldon. En nuestro laboratorio cumple exactamente ese rol: actúa como una fuerza disruptiva anómala que bombardea la infraestructura con picos de tráfico extremos (DDoS masivos) para estresar las capacidades físicas de procesamiento de Gaia y Términus, obligándonos a demostrar la necesidad de una remediación inteligente.
-* **PreCogs (Los Agentes):** Los scripts de monitoreo en Python. Tomados de *Minority Report* de Philip K. Dick, su función principal no es reaccionar a la caída del servidor, sino observar el contexto para predecir la anomalía (el "crimen") y alertar a Multivac antes de que el colapso ocurra.
-* **Agatha (La Precog Principal):** Nuestro centinela de observabilidad predictiva (`precogs/agatha.py`). En *Minority Report* de Philip K. Dick, Agatha es la más talentosa de los mutantes capaces de ver los crímenes antes de que sucedan. En nuestra topología, Agatha es un agente ligero que se sumerge directamente en el flujo de logs de Nginx en tiempo real. Su propósito no es reportar una caída post-mortem, sino predecir el colapso: caza anomalías tempranas (como códigos `499` o bloqueos `50x`) y extrae el contexto para entregarlo a Multivac, disparando una auto-remediación (como un `oc scale`) mucho antes de que la experiencia del usuario final se vea comprometida.
-* **Operaciones Hail Mary (Disaster Recovery):** Protocolos de último recurso. En honor a la obra de Andy Weir, representan los scripts de restauración autónoma que se ejecutan cuando el sistema está en un estado crítico, aislado, y la intervención del SysAdmin es imposible.
-* **Magrathea (El Centro de Mando):** Nuestro directorio principal de aprovisionamiento (`/magrathea`). Al igual que la mítica constructora de planetas de Douglas Adams, es donde ensamblamos mundos (infraestructuras) de la nada, guiados por el principio del 42 (el asterisco `*` en ASCII, el comodín que permite crear cualquier cosa que el operador decida).
-* **Deckard (El Retiro):** Nuestro script de limpieza (Tear Down). Nombrado así por el legendario *Blade Runner*, su trabajo consiste en "retirar" implacablemente a los componentes, procesos y máquinas virtuales que ya han cumplido su ciclo de vida dentro del laboratorio.
-* **Gaia (El Balanceador):** Nuestra topología de proxy inverso y balanceo de carga (HAProxy + Nginx). En honor al planeta de la saga de la *Fundación* de Asimov, donde todas las entidades comparten una conciencia colectiva, enrutando y distribuyendo la carga de procesamiento de forma transparente y en perfecta armonía a través de todos sus nodos.
-* **Términus (La Base de Datos):** Nuestra base de datos persistente (PostgreSQL) operando en el Edge. En la saga de la *Fundación* de Asimov, Términus es el planeta remoto, aislado en el borde de la galaxia, elegido para salvaguardar la Enciclopedia Galáctica y el conocimiento de la humanidad tras la caída del Imperio. En nuestra arquitectura, cumple exactamente esa función: un nodo de almacenamiento soberano, resiliente y desconectado de la nube central (Trántor), garantizando la supervivencia de los datos.
-* **Andrew (El Asistente):** Nuestro bot de ChatOps basado en Telegram. Nombrado en honor al androide protagonista de *El Hombre Bicentenario* de Asimov, cuyo propósito era servir e interactuar de forma natural con los humanos. Andrew es la interfaz móvil conversacional que traduce la complejidad del clúster a un chat simple, permitiendo operar la infraestructura desde cualquier lugar.
+### 🤖 Isaac Asimov
+
+#### La Saga de la Fundación
+* **El Mulo (El Agente de Estrés):**
+  * **Ubicación:** Script `chaos/el_mulo.py` (Locust).
+  * **El Porqué:** En la saga, El Mulo es un mutante impredecible capaz de llevar al colapso el plan perfecto y estático de Hari Seldon. En nuestro laboratorio, actúa como una fuerza disruptiva anómala que bombardea la infraestructura con picos de tráfico extremos (DDoS masivos) para estresar las capacidades físicas del clúster, obligándonos a demostrar la necesidad de una remediación inteligente.
+* **Gaia (El Balanceador):**
+  * **Ubicación:** Topología de Ingress, proxy inverso y balanceo de carga (HAProxy + Nginx) en MicroShift.
+  * **El Porqué:** En honor al planeta donde todas las entidades comparten una conciencia colectiva, enrutando y distribuyendo la carga de procesamiento de forma transparente y en perfecta armonía a través de todos sus nodos.
+* **Términus (La Base de Datos):**
+  * **Ubicación:** Clúster de PostgreSQL operando nativamente en MicroShift (Edge).
+  * **El Porqué:** Términus es el planeta remoto, aislado en el borde de la galaxia, elegido para salvaguardar el conocimiento de la humanidad tras la caída del Imperio Central (Trántor). En nuestra arquitectura, cumple exactamente esa función: un nodo de almacenamiento soberano, resiliente y desconectado de la nube pública, garantizando la supervivencia de los datos.
+
+#### Serie de los Robots y Relatos Cortos
+* **PositronicOps (El Concepto Central):**
+  * **Ubicación:** Nombre y arquitectura global del proyecto.
+  * **El Porqué:** Un guiño a los cerebros positrónicos de Asimov, donde la infraestructura no solo ejecuta comandos, sino que deduce, protege y remedia siguiendo sus propias directivas asimovianas.
+* **Multivac (El Cerebro):**
+  * **Ubicación:** Motor de IA local (Ollama) ejecutándose en contenedores *rootless* dentro del host físico.
+  * **El Porqué:** Nombrada en honor a la supercomputadora oracular (presente en relatos como *La última pregunta*), a la cual la humanidad consulta cuando la lógica lineal y estática no es suficiente para resolver un problema.
+* **Daneel (El Orquestador):**
+  * **Ubicación:** Playbooks de aprovisionamiento en `/magrathea` (Ansible).
+  * **El Porqué:** Inspirado en el legendario *R. Daneel Olivaw*, el robot que opera en las sombras y de forma imperceptible para orquestar la protección y el desarrollo de todo un sistema a gran escala.
+* **Andrew (El Agente ChatOps):**
+  * **Ubicación:** Bot de Telegram centralizado en `precogs/temple.py`.
+  * **El Porqué:** Bautizado por el androide protagonista de *El Hombre Bicentenario*, cuyo propósito original era servir e interactuar de forma natural con los humanos. Andrew es nuestra interfaz móvil conversacional que traduce la complejidad de Kubernetes a un chat simple.
+
+### 👁️ Philip K. Dick
+
+#### Minority Report
+* **El Templo (El Orquestador Central):**
+  * **Ubicación:** Script central `precogs/temple.py`.
+  * **El Porqué:** En la historia, es el recinto aislado y sagrado donde los tres Precogs coexisten y analizan el flujo temporal. En el código, es el orquestador maestro que utiliza hilos (*threading*) para mantener a todas las entidades de IA trabajando en paralelo dentro de un solo proceso de Python.
+* **Agatha (La Precog Principal):**
+  * **Ubicación:** Hilo de ejecución en segundo plano (*background*) dentro del Templo.
+  * **El Porqué:** Agatha es la más talentosa de los mutantes capaces de ver los crímenes antes de que sucedan. Como agente ligero, se sumerge en el flujo de logs de Nginx en tiempo real para predecir el colapso (cazando códigos `499` o `50x`), disparando la auto-remediación antes de que la experiencia del usuario caiga.
+* **Arthur (El Analista):**
+  * **Ubicación:** Hilo de ejecución interactivo (*foreground*) de comandos bajo demanda en el Templo (`/status`).
+  * **El Porqué:** Uno de los gemelos Precog, encargado de traducir las visiones a datos duros. En PositronicOps, Arthur es el puente interactivo de lectura que consulta la API de MicroShift y traduce la salida cruda de Kubernetes a un formato tabular amigable en tu celular.
+* **Dashiell (El Guardián):**
+  * **Ubicación:** Hilo de seguridad y transmisión (WIP) dentro del Templo.
+  * **El Porqué:** El segundo gemelo Precog. Su función será el aislamiento y la difusión: operará como un escudo táctico que transmitirá las visiones y alertas a canales de Telegram públicos para demostraciones en vivo, protegiendo al bot principal.
+
+#### ¿Sueñan los androides con ovejas eléctricas? (Blade Runner)
+* **Deckard (El Retiro):**
+  * **Ubicación:** Script de limpieza `04-teardown-deckard.sh` en `/magrathea`.
+  * **El Porqué:** Su trabajo consiste en "retirar" implacablemente a los componentes, redes y máquinas virtuales que ya han cumplido su ciclo de vida dentro del laboratorio, manteniendo el host físico impecable.
+
+### 🪐 Douglas Adams
+
+#### The Hitchhiker's Guide to the Galaxy
+* **Magrathea (El Centro de Mando):**
+  * **Ubicación:** Directorio principal de aprovisionamiento `/magrathea`.
+  * **El Porqué:** Al igual que la mítica fábrica constructora de planetas, es donde ensamblamos infraestructuras complejas desde cero, guiados por el principio del 42 (el asterisco `*` en Bash/Ansible, el comodín que permite crear mundos enteros).
+
+### 🚀 Andy Weir
+
+#### Project Hail Mary
+* **Operaciones Hail Mary (Disaster Recovery):**
+  * **Ubicación:** Protocolos y scripts de restauración de último recurso.
+  * **El Porqué:** Representan las acciones de supervivencia autónoma que se ejecutan cuando el sistema está en un estado crítico, aislado en el Edge, y la intervención manual del SysAdmin es físicamente imposible.
 
 ---
 👤 **Alex (@rootzilopochtli)** *Technical Training Developer en Red Hat | Miembro de Fedora Project | Autor de "Fedora Linux System Administration"*
