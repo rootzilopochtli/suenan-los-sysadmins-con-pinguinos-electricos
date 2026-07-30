@@ -34,27 +34,42 @@ graph TD
     C[El Mulo<br/>Locust DDoS] -- Ataca --> I
 ```
 
-## 🔮 Agatha: La Precog Principal (`agatha.py`)
+## 🏛️ Temple: El Orquestador Central (`temple.py`)
 
-Agatha es un script táctico de Python que actúa como nuestra centinela. Su misión no es reportar una caída post-mortem, sino predecir el colapso.
+Para evitar la ejecución de scripts aislados, el ecosistema se centraliza a través de `temple.py`.
+Este orquestador utiliza hilos (`threading`) para mantener a todos los Precogs operativos simultáneamente en un solo proceso, permitiendo la vigilancia continua (background) y la interactividad (foreground).
 
-- **Observabilidad en Tiempo Real**: Agatha se sumerge directamente en el flujo de logs del Ingress (Nginx) de la aplicación Gaia.
+## 🔮 Agatha: La Precog Principal (Vigilancia) `agatha.py`
+
+Agatha actúa como nuestra centinela. Su misión no es reportar una caída post-mortem, sino predecir el colapso.
+
+- **Observabilidad en Tiempo Real**: Se sumerge directamente en el flujo de logs del Ingress (Nginx).
 
 - **Detección de Anomalías**: Caza patrones críticos de asfixia en la red, específicamente los códigos `499` (conexiones cerradas por el cliente) y bloqueos `50x`.
 
-- **Auto-Remediación**: Al detectar un "_Pre-Crimen_" (5 anomalías consecutivas), extrae el contexto y consulta a Multivac (nuestro LLM local). Multivac genera un comando de infraestructura (ej. `oc scale`), que Agatha limpia, valida y ejecuta contra el clúster para estabilizar el sistema sin intervención humana.
+- **Auto-Remediación**: Consulta a Multivac para ejecutar comandos estabilizadores sin intervención humana.
 
 🚧 **Work In Progress (WIP)**: Agatha se encuentra en evolución continua. Actualmente estamos desarrollando una "_Matriz de Escalamiento_" donde el agente evaluará el estado actual del clúster antes de actuar, e inyectará defensas avanzadas (`Rate Limiting`) si el ataque persiste a pesar de haber alcanzado la capacidad máxima de réplicas.
+
+## 🧠 Arthur: El Analista (ChatOps Interactivo)
+
+Bautizado en honor a uno de los gemelos Precog, Arthur es la interfaz bidireccional que permite auditar el clúster directamente desde Telegram sin necesidad de abrir una terminal.
+
+- **Consultas en Tiempo Real (`/status`)**: Se conecta a la API local de MicroShift extrayendo de forma segura las credenciales (`KUBECONFIG_PATH` vía `.env`) para renderizar el estado de los Pods (Gaia) directo en tu dispositivo móvil.
+
+- **Monitoreo de Salud (`/ping`)**: Verifica que todos los hilos del orquestador estén respirando.
+
+- **Seguridad y Control de Acceso**: Valida estrictamente el `ADMIN_CHAT_ID`. Cuenta con múltiples rutinas de control de errores, comandos adicionales para la administración y monitoreo de la plataforma, y bloquea de forma segura (y tajante) cualquier intento de ejecución no autorizada o mala sintaxis.
+
+🚧 **Work In Progress (WIP)**: El tercer hermano, **Dashiell (El Guardián)**, se encuentra en fase de desarrollo. Su objetivo será blindar la difusión de eventos hacia un canal público de transmisión segura.
 
 ## 🤖 Andrew: El Agente de ChatOps (`andrew.py`)
 
 Bautizado en honor al robot de _El Hombre Bicentenario_ de Isaac Asimov, Andrew es el puente de comunicación directa entre la infraestructura soberana y tu dispositivo móvil.
 
-- **Notificaciones Seguras**: Integrado de forma nativa con el motor de Agatha, Andrew despacha alertas en tiempo real a un chat privado y cifrado en Telegram.
+- **Notificaciones Seguras**: Integrado de forma nativa con el script `temple.py`, Andrew despacha alertas en tiempo real a un chat privado y cifrado en Telegram.
 
 - **Auditoría Operativa**: Andrew funciona como el _Audit Trail_ del sistema, informando el momento exacto en que se detecta una anomalía, qué comando sugirió Multivac y si la remediación inyectada en el clúster fue exitosa o fallida.
-
-🚧 **Work In Progress (WIP)**: Actualmente Andrew es un agente de notificaciones unidireccional. El desarrollo futuro lo dotará de interactividad bidireccional pura, permitiendo al administrador solicitar métricas o ejecutar comandos de contingencia desde Telegram (ej. `/status` o `/stats`).
 
 ## 🚀 Puesta en Marcha
 
@@ -67,13 +82,17 @@ $ cd precogs
 $ source ../chaos/venv/bin/activate
 ```
 
-2. Sumerge a Agatha en el tanque de visión:
+2. Verifica tu bóveda de secretos:
+
+   Asegúrate de contar con tu archivo oculto `.env` configurado localmente con tus variables `TELEGRAM_TOKEN`, `TELEGRAM_CHAT_ID` y `KUBECONFIG_PATH`.
+
+3. Energiza el Templo:
 
 ```bash
-$ python3 agatha.py
+$ python3 temple.py
 ```
 
-_(Nota: La matriz de comunicaciones de Andrew se inicializa automáticamente al arrancar Agatha)._
+_(Nota: Esto inicializará a Agatha en segundo plano y pondrá a Arthur a escuchar tus directivas)._
 
 ---
 👤 **Alex (@rootzilopochtli)** *Technical Training Developer en Red Hat | Miembro de Fedora Project | Autor de "Fedora Linux System Administration"*
