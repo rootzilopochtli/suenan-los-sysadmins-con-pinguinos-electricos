@@ -24,11 +24,27 @@ graph TD
     end
 
     subgraph "Host (calvin-node)"
-        direction LR
-        A[Agatha<br/>Agente Precog] -- Lee Logs --> F
-        A -- Consulta --> M[Multivac<br/>Ollama LLM]
-        A -- Notifica --> W[Andrew<br/>Telegram Bot]
+        direction TB
+
+        subgraph "El Templo (temple.py)"
+            direction LR
+            AG[Agatha<br/>Vigilancia]
+            AR[Arthur<br/>Interacción]
+            DA[Dashiell<br/>Difusión]
+        end
+
+        M[Multivac<br/>Ollama LLM]
+        W[Andrew<br/>Telegram API]
+
+        AG -- Lee Logs --> F
+        AG -- Predice y Consulta --> M
         M -- Inyecta Comando --> B1
+
+        AR -- Consulta Estado --> B1
+
+        AG -- Notifica Alertas --> W
+        AR -- Responde a Comandos --> W
+        DA -- Transmite a Canal --> W
     end
 
     C[El Mulo<br/>Locust DDoS] -- Ataca --> I
