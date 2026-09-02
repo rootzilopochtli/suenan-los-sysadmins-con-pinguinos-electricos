@@ -4,136 +4,120 @@ import re
 import sys
 import os
 import requests
-import json
-import andrew
+import logging
 
-# URL local donde Multivac (Ollama) está escuchando
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - [%(levelname)s] - %(message)s',
+    handlers=[
+        logging.FileHandler("precogs_audit.log"),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
 MULTIVAC_URL = "http://localhost:11434/api/generate"
-# El modelo que pre-cargamos en el aprovisionamiento
-MULTIVAC_MODEL = "llama3"
 
 def solicitar_remediacion_multivac(contexto_errores):
-    print("🧠 [Agatha] Contactando a Multivac...")
-
-    # Usaremos el endpoint estándar de Ollama /api/generate
-    url = "http://localhost:11434/api/generate"
-
-        # Prompt diseñado para obtener una instrucción técnica directa
+    logging.info("🧠 [Agatha] Contactando a Multivac...")
     prompt = f"""
     Eres Multivac, un agente de infraestructura. El sistema está bajo ataque.
     Analiza estos errores: {contexto_errores}.
-    Responde ÚNICAMENTE con el comando 'oc scale' necesario para escalar el despliegue 'gaia-backend' a 5 réplicas en el namespace 'default'.
+    Responde ÚNICAMENTE con el comando 'oc scale' necesario para escalar el despliegue 'gaia-test' a 3 réplicas en el namespace 'default'.
     No escribas explicaciones, no saludes, no des consejos. Solo el comando.
     """
-
     payload = {
-        "model": "qwen2.5-coder:1.5b",  # <-- EL MODELO CORRECTO QUE VIMOS EN TAGS
+        "model": "qwen2.5-coder:1.5b",
         "prompt": prompt,
         "stream": False
     }
 
     try:
-        response = requests.post(url, json=payload, timeout=30)
+        response = requests.post(MULTIVAC_URL, json=payload, timeout=30)
         response.raise_for_status()
-        resultado = response.json()
-        # En /api/generate, la respuesta viene en ['response']
-        comando = resultado.get('response', '').strip()
-        print(f"🤖 [Multivac] Solución propuesta: {comando}")
+        comando = response.json().get('response', '').strip()
+        logging.info(f"🤖 [Multivac] Solución propuesta: {comando}")
         return comando
     except requests.exceptions.RequestException as e:
-        print(f"❌ [Error] Multivac no responde o configuración incorrecta: {e}")
+        logging.error(f"❌ [Error] Multivac no responde: {e}")
         return None
 
-def vision_precognitiva():
-    DEBUG = False
-    print("🔮 [Agatha] Sumergida en el tanque. Iniciando visión precognitiva en la Capa 2 (Gaia Frontend)...")
+def vision_precognitiva(callback_notificacion, callback_escalamiento):
+    kubeconfig = os.path.expanduser(os.getenv("KUBECONFIG_PATH", ""))
+    cmd = ["oc", "--kubeconfig", kubeconfig, "logs", "deployment/gaia-test", "-f", "--tail=0"]
 
-    if "KUBECONFIG" not in os.environ:
-        print("⚠️ [ADVERTENCIA] KUBECONFIG no detectado en las variables de entorno.")
+    nivel_amenaza = 0
+    ultimo_error = time.time()
 
-    cmd = ["oc", "logs", "deployment/gaia-frontend", "-f", "--tail=10"]
+    while True:
+        logging.info(f"🔮 [Agatha] Sumergida en el tanque. Nivel de amenaza actual: {nivel_amenaza}")
 
-    try:
-        process = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            bufsize=1
-        )
-    except FileNotFoundError:
-        print("❌ [Error] Comando 'oc' no encontrado.")
-        sys.exit(1)
+        try:
+            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
+        except FileNotFoundError:
+            sys.exit(1)
 
-    error_count = 0
-    threshold = 5
-    historial_errores = [] # Almacenamos las líneas para dárselas de contexto a Multivac
+        error_count = 0
+        threshold = 3
+        historial_errores = []
 
-    try:
-        print("🟢 [Agatha] Tubería abierta. Esperando primeras líneas del Ingress...")
+        try:
+            for line in iter(process.stdout.readline, ''):
+                if not line:
+                    continue
 
-        while True:
-            line = process.stdout.readline()
-            if not line:
-                print("💀 [Agatha] El flujo de logs se ha cerrado de forma inesperada.")
-                break
-
-            if re.search(r' (499|50[234]) ', line):
-                error_count += 1
-                historial_errores.append(line.strip())
-                print(f"⚠️ [Visión] Fragmento de anomalía detectado ({error_count}/{threshold})")
-
-                if error_count >= threshold:
-                    print("\n🚨 [CRÍTICO] ¡PRE-CRIMEN DETECTADO! Agatha predice un colapso inminente en el Ingress.")
-
-                    # Que Andrew te avise inmediatamente a tu celular
-                    andrew.notificar("🚨 *¡PRE-CRIMEN DETECTADO!* Agatha predice un colapso por alta concurrencia (499/50x) en `gaia-frontend`. Solicitando directivas a Multivac...")
-
-                    contexto = "\n".join(historial_errores)
-
-                    # Convertimos la lista de errores en un string para el prompt
-                    contexto = "\n".join(historial_errores)
-                    comando = solicitar_remediacion_multivac(contexto)
-
-                    if comando:
-                        # 1. Limpieza Extrema: Quitamos bash, sh, y TODO tipo de comillas inversas
-                        comando_limpio = comando.replace("```bash", "").replace("```sh", "").replace("```", "").replace("`", "").strip()
-
-                        # Si Multivac mete un salto de línea (ej. sh\noc scale...), tomamos solo la línea que empieza con 'oc'
-                        for linea in comando_limpio.split('\n'):
-                            if linea.strip().startswith('oc'):
-                                comando_limpio = linea.strip()
-                                break
-
-                        print(f"⚡ [Auto-Remediación] Ejecutando: {comando_limpio}")
-                        try:
-                            subprocess.run(comando_limpio.split(), check=True)
-                            print("✅ [Remediación] Escalado aplicado exitosamente.")
-
-                            # Que Andrew te confirme el éxito
-                            andrew.notificar(f"✅ *Auto-Remediación Exitosa*\nMultivac ordenó: `{comando_limpio}`\nEl clúster está estabilizándose.")
-
-                        except subprocess.CalledProcessError as e:
-                            print(f"❌ [Error] La remediación falló: {e}")
-                            andrew.notificar(f"❌ *Fallo de Remediación*\nComando fallido: `{comando_limpio}`\nSe requiere intervención humana inmediata.")
-                        except FileNotFoundError as e:
-                            print(f"❌ [Error Fatal] Sintaxis sucia desde Multivac: {e}")
-                            andrew.notificar(f"❌ *Error de Sintaxis IA*\nMultivac alucinó el formato. Comando detectado: `{comando_limpio}`")
-
-                    # 2. El Periodo de Gracia (Cooldown)
-                    print("\n⏳ [Agatha] Entrando en periodo de gracia (60 segundos) para permitir la estabilización de los pods...")
-                    time.sleep(60) # Le damos 1 minuto a Kubernetes para levantar las réplicas
-
-                    print("🔮 [Agatha] Reanudando visión...")
+                if time.time() - ultimo_error > 60 and nivel_amenaza > 0:
+                    logging.info("📉 [Agatha] El clúster se ha mantenido estable. Reduciendo nivel de amenaza a 0.")
+                    nivel_amenaza = 0
                     error_count = 0
-                    historial_errores = [] # Limpiamos el historial
 
-            elif DEBUG:
-                continue
+                if re.search(r' (404|499|50[234]) ', line):
+                    ultimo_error = time.time()
+                    error_count += 1
+                    historial_errores.append(line.strip())
 
-    except KeyboardInterrupt:
-        print("\n🛑 [Agatha] Desconectando de la piscina de pre-crimen. Terminando visión.")
-        process.kill()
+                    logging.warning(f"⚠️ [Agatha] Visión de anomalía detectada ({error_count}/{threshold}): {line.strip()}")
 
-if __name__ == "__main__":
-    vision_precognitiva()
+                    if error_count >= threshold:
+                        nivel_amenaza += 1
+
+                        if nivel_amenaza == 1:
+                            callback_notificacion("🚨 *¡PRE-CRIMEN DETECTADO (Nivel 1)!*\nFalla inicial detectada. Multivac asume el control temporal...")
+                            contexto = "\n".join(historial_errores)
+                            comando = solicitar_remediacion_multivac(contexto)
+
+                            if comando:
+                                comando_limpio = comando.replace("```bash", "").replace("```sh", "").replace("```", "").replace("`", "").strip()
+                                for linea_cmd in comando_limpio.split('\n'):
+                                    if linea_cmd.strip().startswith('oc'):
+                                        comando_limpio = linea_cmd.strip()
+                                        break
+
+                                callback_notificacion(f"⚡ *Auto-Remediación*\nEjecutando: `{comando_limpio}`")
+                                try:
+                                    comando_final = comando_limpio.split()
+                                    comando_final.insert(1, "--kubeconfig")
+                                    comando_final.insert(2, kubeconfig)
+                                    subprocess.run(comando_final, check=True)
+                                except subprocess.CalledProcessError:
+                                    callback_notificacion("❌ Fallo al aplicar comando.")
+
+                            logging.info("⏳ [Agatha] Periodo de gracia (30s)...")
+                            process.kill()
+                            process.wait()
+                            time.sleep(30)
+                            break
+
+                        else:
+                            contexto_ataque = "\n".join(historial_errores[-3:])
+                            callback_escalamiento("🔥 *¡ATAQUE EXPONENCIAL (Nivel 2)!*\nLa anomalía persiste tras la auto-remediación. La IA se detiene para evitar daños. ¡Se requiere Segunda Fundación!", contexto_ataque)
+
+                            logging.critical("🛑 [Agatha] Ataque sostenido. Cediendo control al usuario. Pausa táctica de 60s...")
+                            process.kill()
+                            process.wait()
+                            time.sleep(60)
+                            break
+
+        except KeyboardInterrupt:
+            process.kill()
+            sys.exit(0)
+
