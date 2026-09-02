@@ -7,6 +7,7 @@ import subprocess
 import smtplib
 from email.mime.text import MIMEText
 import random
+import logging
 from dotenv import load_dotenv
 import agatha as agatha
 
@@ -63,7 +64,7 @@ PositronicOps AIOps Team
         server.quit()
         logging.info("📧 [Temple] Reporte ejecutivo despachado por correo.")
     except Exception as e:
-        logging.info(f"❌ [Temple] Fallo al enviar el correo: {e}")
+        logging.error(f"❌ [Temple] Fallo al enviar el correo: {e}")
 
 def escalar_humano(mensaje, contexto):
     estado_incidentes[ADMIN_CHAT_ID] = {"inicio": time.time(), "contexto": contexto}
@@ -153,14 +154,14 @@ def bofh_catch_all(message):
             "Negativo. Multivac se está riendo de tu sintaxis en binario 😅",
             "Ese comando no existe en esta línea temporal. Intenta de nuevo o *RTFM*."
         ]
+        logging.warning(f"Intento de comando BOFH interceptado: {message.text}")
         bot.reply_to(message, random.choice(respuestas_bofh), parse_mode="Markdown")
 
 if __name__ == "__main__":
-    print("🏛️ [Temple] Energizando núcleo. Iniciando ecosistema...")
+    logging.info("🏛️ [Temple] Energizando núcleo. Iniciando ecosistema...")
 
     hilo_agatha = threading.Thread(target=agatha.vision_precognitiva, args=(enviar_alerta, escalar_humano), daemon=True)
     hilo_agatha.start()
 
-    print("🤖 [Andrew/Arthur] Modulando frecuencias. A la espera de directivas...")
+    logging.info("🤖 [Andrew/Arthur] Modulando frecuencias. A la espera de directivas...")
     bot.infinity_polling()
-

@@ -1,168 +1,123 @@
-import os
-import time
-import threading
-import telebot
-from telebot import types
 import subprocess
-import smtplib
-from email.mime.text import MIMEText
-import random
+import time
+import re
+import sys
+import os
+import requests
 import logging
-from dotenv import load_dotenv
-import agatha as agatha
 
-load_dotenv()
-TOKEN = os.getenv("TELEGRAM_TOKEN")
-ADMIN_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
-KUBECONFIG = os.path.expanduser(os.getenv("KUBECONFIG_PATH", ""))
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - [%(levelname)s] - %(message)s',
+    handlers=[
+        logging.FileHandler("precogs_audit.log"),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
 
-# Credenciales SMTP
-SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
-SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
-SMTP_USER = os.getenv("SMTP_USER")
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
-ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
+MULTIVAC_URL = "http://localhost:11434/api/generate"
 
-bot = telebot.TeleBot(TOKEN)
-estado_incidentes = {}
-
-def enviar_alerta(mensaje):
-    bot.send_message(ADMIN_CHAT_ID, mensaje, parse_mode="Markdown")
-
-def enviar_reporte_ejecutivo(accion, contexto, downtime):
-    if not SMTP_PASSWORD:
-        return
-
-    asunto = "🟢 REPORTE DE INCIDENTE: MicroShift Edge (Resuelto)"
-    cuerpo = f"""Estimados,
-
-Se informa que se detectó y contuvo exitosamente un incidente crítico (Nivel 2) en el clúster Positronic-node.
-
-Detalles de la Afectación:
-- Objetivo: gaia-test
-- Tiempo total de degradación (Nivel 2): {downtime:.2f} segundos
-- Evidencia del log: {contexto}
-
-Acciones Correctivas:
-El ataque superó las capacidades de remediación autónoma (Multivac). El Site Reliability Engineer en turno tomó el control de la infraestructura y aplicó la siguiente directiva manual: {accion}.
-
-El sistema opera actualmente con normalidad. No se requiere acción adicional.
-
-Saludos,
-PositronicOps AIOps Team
-"""
-    msg = MIMEText(cuerpo, 'plain')
-    msg['From'] = SMTP_USER
-    msg['To'] = ADMIN_EMAIL
-    msg['Subject'] = asunto
+def solicitar_remediacion_multivac(contexto_errores):
+    logging.info("🧠 [Agatha] Contactando a Multivac...")
+    prompt = f"""
+    Eres Multivac, un agente de infraestructura. El sistema está bajo ataque.
+    Analiza estos errores: {contexto_errores}.
+    Responde ÚNICAMENTE con el comando 'oc scale' necesario para escalar el despliegue 'gaia-test' a 3 réplicas en el namespace 'default'.
+    No escribas explicaciones, no saludes, no des consejos. Solo el comando.
+    """
+    payload = {
+        "model": "qwen2.5-coder:1.5b",
+        "prompt": prompt,
+        "stream": False
+    }
 
     try:
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-        server.starttls()
-        server.login(SMTP_USER, SMTP_PASSWORD)
-        server.send_message(msg)
-        server.quit()
-        logging.info("📧 [Temple] Reporte ejecutivo despachado por correo.")
-    except Exception as e:
-        logging.error(f"❌ [Temple] Fallo al enviar el correo: {e}")
+        response = requests.post(MULTIVAC_URL, json=payload, timeout=30)
+        response.raise_for_status()
+        comando = response.json().get('response', '').strip()
+        logging.info(f"🤖 [Multivac] Solución propuesta: {comando}")
+        return comando
+    except requests.exceptions.RequestException as e:
+        logging.error(f"❌ [Error] Multivac no responde: {e}")
+        return None
 
-def escalar_humano(mensaje, contexto):
-    estado_incidentes[ADMIN_CHAT_ID] = {"inicio": time.time(), "contexto": contexto}
-    markup = types.InlineKeyboardMarkup(row_width=1)
-    btn_ip = types.InlineKeyboardButton("🚫 Bloquear IP (NetworkPolicy)", callback_data="bloquear_ip")
-    btn_pod = types.InlineKeyboardButton("🔄 Reiniciar gaia-test", callback_data="reiniciar_pod")
-    btn_abortar = types.InlineKeyboardButton("❌ Ignorar", callback_data="abortar")
-    markup.add(btn_ip, btn_pod, btn_abortar)
-    bot.send_message(ADMIN_CHAT_ID, f"{mensaje}\n\n*Últimos registros:*\n`{contexto}`", parse_mode="Markdown", reply_markup=markup)
+def vision_precognitiva(callback_notificacion, callback_escalamiento):
+    kubeconfig = os.path.expanduser(os.getenv("KUBECONFIG_PATH", ""))
+    cmd = ["oc", "--kubeconfig", kubeconfig, "logs", "deployment/gaia-test", "-f", "--tail=0"]
 
-@bot.callback_query_handler(func=lambda call: True)
-def manejar_emergencia(call):
-    if str(call.message.chat.id) == ADMIN_CHAT_ID:
-        incidente = estado_incidentes.get(ADMIN_CHAT_ID, {"inicio": time.time(), "contexto": "N/A"})
-        downtime = time.time() - incidente["inicio"]
+    nivel_amenaza = 0
+    ultimo_error = time.time()
 
-        if call.data == "bloquear_ip":
-            bot.answer_callback_query(call.id, "Aplicando NetworkPolicy...")
-            bot.edit_message_text("🛡️ *Contención Activada:*\nSe simuló el bloqueo de la IP agresora.", chat_id=call.message.chat.id, message_id=call.message.message_id, parse_mode="Markdown")
-            enviar_reporte_ejecutivo("Aislamiento de red mediante NetworkPolicy", incidente["contexto"], downtime)
-        elif call.data == "reiniciar_pod":
-            bot.answer_callback_query(call.id, "Reiniciando pods...")
-            try:
-                subprocess.run(["oc", "--kubeconfig", KUBECONFIG, "rollout", "restart", "deployment/gaia-test", "-n", "default"], check=True)
-                bot.edit_message_text("🔄 *Contención Activada:*\nDespliegue `gaia-test` reiniciado exitosamente.", chat_id=call.message.chat.id, message_id=call.message.message_id, parse_mode="Markdown")
-                enviar_reporte_ejecutivo("Reinicio en caliente del despliegue (Rollout Restart)", incidente["contexto"], downtime)
-            except Exception:
-                bot.send_message(ADMIN_CHAT_ID, "❌ Fallo al reiniciar el servicio.")
-        elif call.data == "abortar":
-            bot.answer_callback_query(call.id, "Operación ignorada.")
-            bot.edit_message_text("👀 *Alerta Ignorada:*\nEl clúster seguirá monitoreando en segundo plano.", chat_id=call.message.chat.id, message_id=call.message.message_id, parse_mode="Markdown")
+    while True:
+        logging.info(f"🔮 [Agatha] Sumergida en el tanque. Nivel de amenaza actual: {nivel_amenaza}")
 
-@bot.message_handler(commands=['ping'])
-def send_ping(message):
-    if str(message.chat.id) == ADMIN_CHAT_ID:
-        bot.reply_to(message, "¡Pong! 🏓 Sistemas en línea.")
-
-@bot.message_handler(commands=['perf'])
-def cmd_perf(message):
-    if str(message.chat.id) == ADMIN_CHAT_ID:
-        msg_temp = bot.reply_to(message, "⚙️ [Arthur] Extrayendo telemetría de MicroShift...")
         try:
-            nodos = subprocess.run(["oc", "--kubeconfig", KUBECONFIG, "adm", "top", "nodes"], capture_output=True, text=True, check=True).stdout
-            pods = subprocess.run(["oc", "--kubeconfig", KUBECONFIG, "adm", "top", "pods", "-n", "default"], capture_output=True, text=True, check=True).stdout
-            bot.edit_message_text(f"📈 *Rendimiento del Clúster:*\n\n*Nodos:*\n```text\n{nodos}```\n*Pods (default):*\n```text\n{pods}```", chat_id=message.chat.id, message_id=msg_temp.message_id, parse_mode="Markdown")
-        except Exception:
-            bot.edit_message_text("❌ [Arthur] Falla al extraer métricas. ¿Está desplegado el metrics-server?", chat_id=message.chat.id, message_id=msg_temp.message_id)
-
-@bot.message_handler(commands=['status'])
-def cmd_status(message):
-    """Arthur: Consulta el estado en vivo de los pods del clúster."""
-    if str(message.chat.id) == ADMIN_CHAT_ID:
-        msg_temp = bot.reply_to(message, "🔍 [Arthur] Analizando la línea temporal del clúster...")
-        try:
-            resultado = subprocess.run(["oc", "--kubeconfig", KUBECONFIG, "get", "pods", "-n", "default"], capture_output=True, text=True, check=True)
-            bot.edit_message_text(f"📊 *Estado Actual (Gaia):*\n```text\n{resultado.stdout}\n```", chat_id=message.chat.id, message_id=msg_temp.message_id, parse_mode="Markdown")
-        except subprocess.CalledProcessError as e:
-            bot.edit_message_text(f"❌ [Arthur] Falla al consultar el clúster:\n```text\n{e.stderr}\n```", chat_id=message.chat.id, message_id=msg_temp.message_id, parse_mode="Markdown")
+            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
         except FileNotFoundError:
-            bot.edit_message_text("❌ [Arthur] Comando 'oc' no encontrado. ¿Estoy ejecutándome en el nodo correcto?", chat_id=message.chat.id, message_id=msg_temp.message_id)
+            sys.exit(1)
 
-@bot.message_handler(commands=['bofh'])
-def cmd_bofh(message):
-    """Easter Egg explícito."""
-    if str(message.chat.id) == ADMIN_CHAT_ID:
-        excusa = "Falla catastrófica por interferencia de taquiones en el buffer de Nginx. Manda un correo a soporte y encomiéndate a los dioses del kernel."
-        bot.reply_to(message, f"☠️ *[BOFH]*\n{excusa}\n\n_RTFM._", parse_mode="Markdown")
+        error_count = 0
+        threshold = 3
+        historial_errores = []
 
-@bot.message_handler(commands=['reboot', 'reset', 'poweroff', 'halt', 'shutdown'])
-def cmd_troll_system(message):
-    """Atrapa intentos de apagar el sistema y se burla del usuario."""
-    if str(message.chat.id) == ADMIN_CHAT_ID:
-        bot.reply_to(message, "🤡 ¡Jajaja! No lo creo mai.")
+        try:
+            for line in iter(process.stdout.readline, ''):
+                if not line:
+                    continue
 
-@bot.message_handler(func=lambda message: True)
-def bofh_catch_all(message):
-    """Atrapa cualquier comando o texto no reconocido con actitud BOFH."""
-    if str(message.chat.id) == ADMIN_CHAT_ID:
-        respuestas_bofh = [
-            "🛑 Exceso de baneados.",
-            "🫩 Negativo. El bot está apagado.",
-            "⚠️  Te van a banear...",
-            "🛡️ Exceso de dictadura.",
-            f"¿`{message.text}`? Mis registros indican un problema en la Capa 8.",
-            f"Comando `{message.text}` no reconocido. Redirigiendo petición a `/dev/null`.",
-            f"¿`{message.text}`? Interesante intento. Mis registros indican que tienes un error de Capa 8.",
-            "Negativo. Multivac se está riendo de tu sintaxis en binario 😅",
-            "Ese comando no existe en esta línea temporal. Intenta de nuevo o *RTFM*."
-        ]
-        logging.warning(f"Intento de comando BOFH interceptado: {message.text}")
-        bot.reply_to(message, random.choice(respuestas_bofh), parse_mode="Markdown")
+                if time.time() - ultimo_error > 60 and nivel_amenaza > 0:
+                    logging.info("📉 [Agatha] El clúster se ha mantenido estable. Reduciendo nivel de amenaza a 0.")
+                    nivel_amenaza = 0
+                    error_count = 0
 
-if __name__ == "__main__":
-    logging.info("🏛️ [Temple] Energizando núcleo. Iniciando ecosistema...")
+                if re.search(r' (404|499|50[234]) ', line):
+                    ultimo_error = time.time()
+                    error_count += 1
+                    historial_errores.append(line.strip())
 
-    hilo_agatha = threading.Thread(target=agatha.vision_precognitiva, args=(enviar_alerta, escalar_humano), daemon=True)
-    hilo_agatha.start()
+                    logging.warning(f"⚠️ [Agatha] Visión de anomalía detectada ({error_count}/{threshold}): {line.strip()}")
 
-    logging.info("🤖 [Andrew/Arthur] Modulando frecuencias. A la espera de directivas...")
-    bot.infinity_polling()
+                    if error_count >= threshold:
+                        nivel_amenaza += 1
+
+                        if nivel_amenaza == 1:
+                            callback_notificacion("🚨 *¡PRE-CRIMEN DETECTADO (Nivel 1)!*\nFalla inicial detectada. Multivac asume el control temporal...")
+                            contexto = "\n".join(historial_errores)
+                            comando = solicitar_remediacion_multivac(contexto)
+
+                            if comando:
+                                comando_limpio = comando.replace("```bash", "").replace("```sh", "").replace("```", "").replace("`", "").strip()
+                                for linea_cmd in comando_limpio.split('\n'):
+                                    if linea_cmd.strip().startswith('oc'):
+                                        comando_limpio = linea_cmd.strip()
+                                        break
+
+                                callback_notificacion(f"⚡ *Auto-Remediación*\nEjecutando: `{comando_limpio}`")
+                                try:
+                                    comando_final = comando_limpio.split()
+                                    comando_final.insert(1, "--kubeconfig")
+                                    comando_final.insert(2, kubeconfig)
+                                    subprocess.run(comando_final, check=True)
+                                except subprocess.CalledProcessError:
+                                    callback_notificacion("❌ Fallo al aplicar comando.")
+
+                            logging.info("⏳ [Agatha] Periodo de gracia (30s)...")
+                            process.kill()
+                            process.wait()
+                            time.sleep(30)
+                            break
+
+                        else:
+                            contexto_ataque = "\n".join(historial_errores[-3:])
+                            callback_escalamiento("🔥 *¡ATAQUE EXPONENCIAL (Nivel 2)!*\nLa anomalía persiste tras la auto-remediación. La IA se detiene para evitar daños. ¡Se requiere Segunda Fundación!", contexto_ataque)
+
+                            logging.critical("🛑 [Agatha] Ataque sostenido. Cediendo control al usuario. Pausa táctica de 60s...")
+                            process.kill()
+                            process.wait()
+                            time.sleep(60)
+                            break
+
+        except KeyboardInterrupt:
+            process.kill()
+            sys.exit(0)
 
