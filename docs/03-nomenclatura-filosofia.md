@@ -43,12 +43,12 @@ Este proyecto no solo explora el futuro de la infraestructura, sino que rinde ho
 * **Agatha (La Precog Principal):**
   * **Ubicación:** Hilo de ejecución en segundo plano (*background*) dentro del Templo.
   * **El Porqué:** Agatha es la más talentosa de los mutantes capaces de ver los crímenes antes de que sucedan. Como agente ligero, se sumerge en el flujo de logs de Nginx en tiempo real para predecir el colapso (cazando códigos `499` o `50x`), disparando la auto-remediación antes de que la experiencia del usuario caiga.
-* **Arthur (El Analista):**
-  * **Ubicación:** Hilo de ejecución interactivo (*foreground*) de comandos bajo demanda en el Templo (`/status`).
-  * **El Porqué:** Uno de los gemelos Precog, encargado de traducir las visiones a datos duros. En PositronicOps, Arthur es el puente interactivo de lectura que consulta la API de MicroShift y traduce la salida cruda de Kubernetes a un formato tabular amigable en tu celular.
-* **Dashiell (El Guardián):**
-  * **Ubicación:** Hilo de seguridad y transmisión (WIP) dentro del Templo.
-  * **El Porqué:** El segundo gemelo Precog. Su función será el aislamiento y la difusión: operará como un escudo táctico que transmitirá las visiones y alertas a canales de Telegram públicos para demostraciones en vivo, protegiendo al bot principal.
+* **Arthur (El Analista Histórico):**
+  * **Ubicación:** Motor de análisis de telemetría histórica y base de conocimiento (Futuro RAG).
+  * **El Porqué:**  Originalmente diseñado como un puente interactivo que consultaba la API de MicroShift para traducir salidas crudas a tablas legibles, Arthur evoluciona hacia el análisis profundo. Su nueva directiva es procesar los resúmenes de logs y auditar las remediaciones ejecutadas por Multivac tras las alertas de Agatha. En fases posteriores, será el núcleo de memoria del ecosistema, permitiendo que la plataforma "aprenda" referenciando incidentes previos para evitar diagnósticos redundantes.
+* **Dashiell (El Oráculo de Rendimiento):**
+  * **Ubicación:** Módulo de observabilidad de métricas y Capacity Planning predictivo.
+  * **El Porqué:** Concebido inicialmente como un escudo táctico de transmisión pública para proteger al bot principal, Dashiell se transforma en el guardián de los recursos físicos. Se encarga de monitorear la salud, el estrés de los nodos y el consumo de los pods en el clúster. Su evolución lógica será aplicar análisis predictivo sobre estas métricas para alertar si los recursos designados son suficientes para las cargas actuales, actuando como un asesor automatizado de Capacity Planning.
 
 #### ¿Sueñan los androides con ovejas eléctricas? (Blade Runner)
 * **Deckard (El Retiro):**
