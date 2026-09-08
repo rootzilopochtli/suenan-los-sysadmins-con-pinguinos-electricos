@@ -17,6 +17,26 @@ logging.basicConfig(
 
 MULTIVAC_URL = "http://localhost:11434/api/generate"
 
+# Estado global para ser consultado por ChatOps
+estado_actual = {
+    "nivel_amenaza": 0,
+    "status": "Sumergida en el tanque. Clúster estable."
+}
+
+def consultar_estado():
+    """Retorna el estado operativo actual formateado para ChatOps."""
+    amenaza = estado_actual["nivel_amenaza"]
+    status = estado_actual["status"]
+
+    if amenaza == 0:
+        icono = "🟢"
+    elif amenaza == 1:
+        icono = "🟡"
+    else:
+        icono = "🔴"
+
+    return f"{icono} *Visión Precognitiva (Agatha)*\n\n*Nivel de Amenaza:* {amenaza}\n*Estado:* {status}"
+
 def solicitar_remediacion_multivac(contexto_errores):
     logging.info("🧠 [Agatha] Contactando a Multivac...")
     prompt = f"""
@@ -42,14 +62,15 @@ def solicitar_remediacion_multivac(contexto_errores):
         return None
 
 def vision_precognitiva(callback_notificacion, callback_escalamiento):
+    global estado_actual
     kubeconfig = os.path.expanduser(os.getenv("KUBECONFIG_PATH", ""))
     cmd = ["oc", "--kubeconfig", kubeconfig, "logs", "deployment/gaia-test", "-f", "--tail=0"]
 
-    nivel_amenaza = 0
     ultimo_error = time.time()
 
     while True:
-        logging.info(f"🔮 [Agatha] Sumergida en el tanque. Nivel de amenaza actual: {nivel_amenaza}")
+        estado_actual["status"] = "Sumergida en el tanque. Monitoreo pasivo."
+        logging.info(f"🔮 [Agatha] Sumergida en el tanque. Nivel de amenaza actual: {estado_actual['nivel_amenaza']}")
 
         try:
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
@@ -65,9 +86,10 @@ def vision_precognitiva(callback_notificacion, callback_escalamiento):
                 if not line:
                     continue
 
-                if time.time() - ultimo_error > 60 and nivel_amenaza > 0:
+                if time.time() - ultimo_error > 60 and estado_actual["nivel_amenaza"] > 0:
                     logging.info("📉 [Agatha] El clúster se ha mantenido estable. Reduciendo nivel de amenaza a 0.")
-                    nivel_amenaza = 0
+                    estado_actual["nivel_amenaza"] = 0
+                    estado_actual["status"] = "Sumergida en el tanque. Clúster estable."
                     error_count = 0
 
                 if re.search(r' (404|499|50[234]) ', line):
@@ -78,9 +100,11 @@ def vision_precognitiva(callback_notificacion, callback_escalamiento):
                     logging.warning(f"⚠️ [Agatha] Visión de anomalía detectada ({error_count}/{threshold}): {line.strip()}")
 
                     if error_count >= threshold:
-                        nivel_amenaza += 1
+                        estado_actual["nivel_amenaza"] += 1
+                        estado_actual["status"] = "Anomalía detectada. Analizando patrones hostiles."
 
-                        if nivel_amenaza == 1:
+                        if estado_actual["nivel_amenaza"] == 1:
+                            estado_actual["status"] = "Auto-Remediación en curso (Multivac)."
                             callback_notificacion("🚨 *¡PRE-CRIMEN DETECTADO (Nivel 1)!*\nFalla inicial detectada. Multivac asume el control temporal...")
                             contexto = "\n".join(historial_errores)
                             comando = solicitar_remediacion_multivac(contexto)
@@ -102,12 +126,14 @@ def vision_precognitiva(callback_notificacion, callback_escalamiento):
                                     callback_notificacion("❌ Fallo al aplicar comando.")
 
                             logging.info("⏳ [Agatha] Periodo de gracia (30s)...")
+                            estado_actual["status"] = "Periodo de gracia tras remediación (30s)."
                             process.kill()
                             process.wait()
                             time.sleep(30)
                             break
 
                         else:
+                            estado_actual["status"] = "Ataque sostenido. Control cedido al usuario (Nivel 2)."
                             contexto_ataque = "\n".join(historial_errores[-3:])
                             callback_escalamiento("🔥 *¡ATAQUE EXPONENCIAL (Nivel 2)!*\nLa anomalía persiste tras la auto-remediación. La IA se detiene para evitar daños. ¡Se requiere Segunda Fundación!", contexto_ataque)
 
