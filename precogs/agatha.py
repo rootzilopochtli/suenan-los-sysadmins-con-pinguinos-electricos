@@ -62,7 +62,6 @@ def solicitar_remediacion_multivac(contexto_errores):
         return None
 
 def vision_precognitiva(callback_notificacion, callback_escalamiento):
-    global estado_actual
     kubeconfig = os.path.expanduser(os.getenv("KUBECONFIG_PATH", ""))
     cmd = ["oc", "--kubeconfig", kubeconfig, "logs", "deployment/gaia-test", "-f", "--tail=0"]
 
