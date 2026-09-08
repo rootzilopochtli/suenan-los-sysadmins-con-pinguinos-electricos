@@ -1,15 +1,20 @@
-import os
-import time
-import threading
-import telebot
-from telebot import types
-import subprocess
-import smtplib
-from email.mime.text import MIMEText
-import random
 import logging
+import os
+import random
+import smtplib
+import subprocess
+import threading
+import time
+from collections import Counter
+from email.mime.text import MIMEText
+
+import telebot
 from dotenv import load_dotenv
-import agatha as agatha
+from telebot import types
+
+import agatha
+import arthur
+import dashiell
 
 load_dotenv()
 TOKEN = os.getenv("TELEGRAM_TOKEN")
@@ -105,26 +110,202 @@ def send_ping(message):
 @bot.message_handler(commands=['perf'])
 def cmd_perf(message):
     if str(message.chat.id) == ADMIN_CHAT_ID:
-        msg_temp = bot.reply_to(message, "⚙️ [Arthur] Extrayendo telemetría de MicroShift...")
-        try:
-            nodos = subprocess.run(["oc", "--kubeconfig", KUBECONFIG, "adm", "top", "nodes"], capture_output=True, text=True, check=True).stdout
-            pods = subprocess.run(["oc", "--kubeconfig", KUBECONFIG, "adm", "top", "pods", "-n", "default"], capture_output=True, text=True, check=True).stdout
-            bot.edit_message_text(f"📈 *Rendimiento del Clúster:*\n\n*Nodos:*\n```text\n{nodos}```\n*Pods (default):*\n```text\n{pods}```", chat_id=message.chat.id, message_id=msg_temp.message_id, parse_mode="Markdown")
-        except Exception:
-            bot.edit_message_text("❌ [Arthur] Falla al extraer métricas. ¿Está desplegado el metrics-server?", chat_id=message.chat.id, message_id=msg_temp.message_id)
+        msg_temp = bot.reply_to(message, "⚙️ [Dashiell] Extrayendo telemetría de MicroShift...")
+        rendimiento = dashiell.obtener_rendimiento()
+        bot.edit_message_text(
+            rendimiento,
+            chat_id=message.chat.id,
+            message_id=msg_temp.message_id,
+            parse_mode="Markdown"
+        )
 
 @bot.message_handler(commands=['status'])
 def cmd_status(message):
-    """Arthur: Consulta el estado en vivo de los pods del clúster."""
+    """Consulta el estado en vivo de los pods del clúster."""
     if str(message.chat.id) == ADMIN_CHAT_ID:
-        msg_temp = bot.reply_to(message, "🔍 [Arthur] Analizando la línea temporal del clúster...")
-        try:
-            resultado = subprocess.run(["oc", "--kubeconfig", KUBECONFIG, "get", "pods", "-n", "default"], capture_output=True, text=True, check=True)
-            bot.edit_message_text(f"📊 *Estado Actual (Gaia):*\n```text\n{resultado.stdout}\n```", chat_id=message.chat.id, message_id=msg_temp.message_id, parse_mode="Markdown")
-        except subprocess.CalledProcessError as e:
-            bot.edit_message_text(f"❌ [Arthur] Falla al consultar el clúster:\n```text\n{e.stderr}\n```", chat_id=message.chat.id, message_id=msg_temp.message_id, parse_mode="Markdown")
-        except FileNotFoundError:
-            bot.edit_message_text("❌ [Arthur] Comando 'oc' no encontrado. ¿Estoy ejecutándome en el nodo correcto?", chat_id=message.chat.id, message_id=msg_temp.message_id)
+        msg_temp = bot.reply_to(message, "🔍 [Dashiell] Analizando la línea temporal del clúster...")
+        estado = dashiell.obtener_estado_pods()
+        bot.edit_message_text(
+            estado,
+            chat_id=message.chat.id,
+            message_id=msg_temp.message_id,
+            parse_mode="Markdown"
+        )
+
+@bot.message_handler(commands=['auditoria'])
+def cmd_auditoria(message):
+    """Arthur: Inferencia histórica de logs vía RAG."""
+    if str(message.chat.id) == ADMIN_CHAT_ID:
+        # Registramos formalmente el evento en la bitácora para sincronizar el timestamp del cursor
+        logging.info("🧠 [Arthur] Auditoría manual solicitada por el Administrador.")
+
+        msg_temp = bot.reply_to(message, "🧠 [Arthur] Consultando la memoria histórica y procesando inferencia...")
+
+        analisis = arthur.analizar_historial()
+
+        bot.edit_message_text(
+            f"📜 *Reporte Cognitivo (Arthur):*\n\n{analisis}",
+            chat_id=message.chat.id,
+            message_id=msg_temp.message_id,
+            parse_mode="Markdown"
+        )
+
+@bot.message_handler(commands=['agatha'])
+def cmd_agatha(message):
+    """Consulta el nivel de amenaza actual y estado operativo."""
+    if str(message.chat.id) == ADMIN_CHAT_ID:
+        estado = agatha.consultar_estado()
+        bot.reply_to(message, estado, parse_mode="Markdown")
+
+@bot.message_handler(commands=['toalla', 'towel'])
+def cmd_hitchhiker(message):
+    """Easter Egg: El sentido de la vida, el universo y todo lo demás."""
+    if str(message.chat.id) == ADMIN_CHAT_ID:
+        bot.reply_to(message, "🌌 *42*\n\n_(Y no olvides tu toalla)_", parse_mode="Markdown")
+
+@bot.message_handler(commands=['?', 'help', 'ayuda'])
+def cmd_help(message):
+    """Despliega la lista de comandos válidos."""
+    if str(message.chat.id) == ADMIN_CHAT_ID:
+        menu = (
+            "🤖 *Directivas del Sistema PositronicOps*\n\n"
+            "📊 *Observabilidad (Dashiell)*\n"
+            "• `/status` - Estado en vivo de contenedores (Gaia)\n"
+            "• `/perf` - Telemetría de consumo (CPU/RAM)\n\n"
+            "🧠 *Cognición (Arthur & Agatha)*\n"
+            "• `/agatha` - Nivel de amenaza (Pre-crimen)\n"
+            "• `/auditoria` - Análisis RAG de la línea temporal\n\n"
+            "🛡️ *Bitácoras de Seguridad*\n"
+            "• `/resumen` - Dashboard ejecutivo de defensas\n"
+            "• `/nivel1` - Registro de auto-remediaciones\n"
+            "• `/baneados` - Muro de la Vergüenza (BOFH)\n\n"
+            "⚙️ *Sistema*\n"
+            "• `/ping` - Verificación de enlace\n"
+            "• `/?` - Muestra este manual de operaciones"
+        )
+        bot.reply_to(message, menu, parse_mode="Markdown")
+
+@bot.message_handler(commands=['nivel1'])
+def cmd_nivel1(message):
+    """Bitácora de Auto-remediación: Eventos de Nivel 1 contenidos con Traductor Táctico."""
+    if str(message.chat.id) == ADMIN_CHAT_ID:
+        log_file = "precogs_audit.log"
+
+        if not os.path.exists(log_file):
+            bot.reply_to(message, "📭 La bitácora está vacía. Cero anomalías detectadas.")
+            return
+
+        def traducir_accion(comando):
+            """Mapea comandos crudos a explicaciones ejecutivas."""
+            cmd = comando.lower()
+            if "scale deployment" in cmd:
+                return "Escalamiento automático de réplicas para absorber pico de tráfico."
+            elif "networkpolicy" in cmd or "deny" in cmd:
+                return "Aislamiento de red activado (Bloqueo de origen sospechoso)."
+            elif "rollout restart" in cmd:
+                return "Reinicio preventivo de pods para purgar conexiones colgadas."
+            return "Contención táctica genérica aplicada."
+
+        incidentes = []
+        with open(log_file, "r") as f:
+            lineas = f.readlines()
+
+        for i, linea in enumerate(lineas):
+            if "Solución propuesta:" in linea:
+                try:
+                    timestamp = linea.split(" - ")[0].split(",")[0].strip()
+
+                    if i + 1 < len(lineas):
+                        accion = lineas[i+1].strip()
+                        accion = accion.replace("'", "").replace('"', "").replace('`', '').replace('*', '').replace('_', '')
+
+                        # Generamos la "carnita"
+                        explicacion = traducir_accion(accion)
+
+                        incidentes.append((timestamp, accion, explicacion))
+                except Exception:
+                    continue
+
+        if not incidentes:
+            bot.reply_to(message, "✅ Clúster pacífico. No se han registrado auto-remediaciones de Nivel 1.")
+            return
+
+        total_incidentes = len(incidentes)
+        ultimos_incidentes = incidentes[-5:]
+
+        reporte = (
+            f"⚡ *Bitácora de Auto-Remediación (Nivel 1)*\n"
+            f"📊 *Total histórico:* `{total_incidentes}` contenciones\n"
+            f"_Mostrando los 5 eventos más recientes:_\n\n"
+        )
+
+        for ts, accion, explicacion in ultimos_incidentes:
+            reporte += (
+                f"• 🕒 `{ts}`\n"
+                f"  🧠 *Contexto:* {explicacion}\n"
+                f"  🛠️ *Comando:* `{accion}`\n\n"
+            )
+
+        bot.reply_to(message, reporte.strip(), parse_mode="Markdown")
+
+@bot.message_handler(commands=['baneados'])
+def cmd_muro_vergüenza(message):
+    """Muro de la Vergüenza: Conteo de comandos inválidos interceptados (Determinista)."""
+    if str(message.chat.id) == ADMIN_CHAT_ID:
+        log_file = "precogs_audit.log"
+
+        if not os.path.exists(log_file):
+            bot.reply_to(message, "📭 La bitácora está vacía. Cero intentos de sabotaje.")
+            return
+
+        comandos_interceptados = []
+        with open(log_file, "r") as f:
+            for linea in f:
+                if "Intento de comando BOFH interceptado:" in linea:
+                    comando = linea.split("interceptado: ")[-1].strip()
+                    comandos_interceptados.append(comando)
+
+        if not comandos_interceptados:
+            bot.reply_to(message, "🛡️ Sistema invicto. No se han registrado comandos BOFH.")
+            return
+
+        conteo = Counter(comandos_interceptados)
+
+        reporte = "🛡️ *Muro de la Vergüenza*\n_Comandos no autorizados interceptados_\n\n"
+        for cmd, freq in conteo.most_common(10):
+            reporte += f"• `{cmd}` : {freq} intento(s)\n"
+
+        bot.reply_to(message, reporte, parse_mode="Markdown")
+
+@bot.message_handler(commands=['resumen'])
+def cmd_resumen(message):
+    """Dashboard Ejecutivo: Resumen global de operaciones y seguridad (Determinista)."""
+    if str(message.chat.id) == ADMIN_CHAT_ID:
+        log_file = "precogs_audit.log"
+
+        if not os.path.exists(log_file):
+            bot.reply_to(message, "📭 Infraestructura en blanco. No hay datos de telemetría registrados.")
+            return
+
+        bofh_count = 0
+        nivel1_count = 0
+
+        with open(log_file, "r") as f:
+            for linea in f:
+                if "Intento de comando BOFH interceptado:" in linea:
+                    bofh_count += 1
+                elif "Solución propuesta:" in linea:
+                    nivel1_count += 1
+
+        reporte = (
+            "📊 *Dashboard Ejecutivo de PositronicOps*\n"
+            "_Estado global de defensas automatizadas_\n\n"
+            f"🛡️ *Escudos BOFH:* `{bofh_count}` bloqueos de usuario\n"
+            f"⚡ *Pre-crímenes Nivel 1:* `{nivel1_count}` auto-remediaciones aplicadas\n\n"
+            "🟢 El clúster opera dentro de los parámetros esperados."
+        )
+
+        bot.reply_to(message, reporte, parse_mode="Markdown")
 
 @bot.message_handler(commands=['bofh'])
 def cmd_bofh(message):
