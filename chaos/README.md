@@ -21,9 +21,9 @@ $ source venv/bin/activate
 $ pip install locust
 ```
 
-## 🚀 Iniciando la Incursión Multiversal
+## 🚀 Iniciando la Incursión Multiversal (Stress Total)
 
-Para despertar a El Mulo y levantar el centro de mando táctico en tu host local, ejecuta:
+Para despertar a El Mulo original y levantar el centro de mando táctico en tu host local, ejecuta:
 
 ```bash
 $ locust -f el_mulo.py
@@ -42,6 +42,40 @@ Abre tu navegador en http://localhost:8089. Para disparar las visiones de Agatha
 ![Evento Nexus](../assets/locust.png)
 
 Haz clic en **Start swarming** para abrir el multiverso.
+
+## 🎭 El Mulo "Nerfeado": Chaos Controlado para Live Demos
+
+Durante pruebas exhaustivas, descubrimos que el Mulo original es demasiado destructivo.
+Generar miles de peticiones crudas no solo asfixia la red, sino que puede colapsar la CPU del equipo anfitrión y llenar el almacenamiento de logs del nodo Edge (`DiskPressure`) antes de que la IA pueda reaccionar de forma didáctica.
+
+Para presentaciones en vivo, introducimos `el_mulo_nerfeado.py`.
+Este script ejecuta un ataque quirúrgico y determinista: simula un escaneo hostil de vulnerabilidades (buscando rutas como `/api/admin/dump`) que genera errores `404` inmediatos.
+Esto dispara la visión precognitiva de Agatha de forma segura, garantizando la demostración del Control Loop de AIOps sin derretir la infraestructura física.
+
+## 🎬 Runbook de Demostración (Modo Headless)
+
+Para la presentación, prescindimos de la interfaz gráfica y ejecutamos ráfagas cronometradas exactas desde la terminal, emitiendo alertas directas a Telegram.
+
+**Acto 1: La Promesa de AIOps (Auto-remediación)**
+
+Ráfaga corta de 20 segundos.
+Agatha detecta los `404`, invoca a Multivac y escala el backend preventivamente a 3 réplicas.
+El ataque termina durante el periodo de gracia, demostrando la estabilización autónoma (Nivel 1).
+
+```bash
+$ locust -f el_mulo_nerfeado.py --host=[http://gaia.positronic.local](http://gaia.positronic.local) --headless -u 200 -r 50 -t 20s
+```
+
+**Acto 2: El Límite de la Máquina (Escalamiento Humano)**
+
+Ráfaga sostenida de 60 segundos.
+Agatha auto-remedia y entra en su pausa táctica de 30 segundos.
+Al despertar, nota que el ataque continúa.
+Reconociendo sus propios límites, detiene la automatización para evitar daños colaterales y cede el control al SRE vía ChatOps para intervención manual (Nivel 2).
+
+```bash
+$ locust -f el_mulo_nerfeado.py --host=[http://gaia.positronic.local](http://gaia.positronic.local) --headless -u 200 -r 50 -t 60s
+```
 
 ## 📈 Monitoreo del Colapso
 
@@ -65,4 +99,9 @@ Someter a la topología de MicroShift a una carga de 100,000 usuarios concurrent
     - `HTTP 504 Gateway Time-out`: El backend se asfixia intentando comunicarse con la base de datos Términus.
     - `HTTP 503 Service Unavailable`: Agotamiento total de los workers.
 
-**Conclusión del Baseline**: Una arquitectura Edge estática es incapaz de sobrevivir a un pico de tráfico anómalo masivo. La intervención humana llega demasiado tarde. Se requiere observabilidad predictiva y remediación dinámica (Precogs + Multivac).
+**Conclusión del Baseline**: Una arquitectura Edge estática es incapaz de sobrevivir a un pico de tráfico anómalo masivo.
+La intervención humana llega demasiado tarde.
+Se requiere observabilidad predictiva y remediación dinámica (Precogs + Multivac).
+
+---
+👤 **Alex (@rootzilopochtli)** *Technical Training Developer en Red Hat | Miembro de Fedora Project | Autor de "Fedora Linux System Administration"*
