@@ -103,6 +103,22 @@ Bautizado en honor al robot de _El Hombre Bicentenario_, de Isaac Asimov, Andrew
 
 Nuestros agentes comparten dependencias del entorno de asalto. Para iniciar la vigilancia:
 
+**Paso Cero: Parametrizar el Entorno**
+
+*(Obligatorio para que los agentes sepan qué monitorear sin quemar código duro).*
+
+```bash
+$ cd precogs
+$ cp .env.example .env
+$ vim .env
+```
++ Asegúrate de configurar los valores dentro del archivo `.env`:
+   * `TELEGRAM_TOKEN` y `TELEGRAM_CHAT_ID` (Para control vía ChatOps).
+   * `KUBECONFIG_PATH` (Ruta al clúster MicroShift).
+   * `SSH_KEY_PATH` (Ruta relativa a la llave de acceso al nodo Edge).
+   * `ADMIN_EMAIL`, `SMTP_SERVER`, `SMTP_PORT`, `SMTP_USER`, y `SMTP_PASSWORD` (Para el envío de reportes Post-Mortem de Nivel 2).
+   * Variables de Arquitectura: Deja intactos `TARGET_FRONTEND` y `TARGET_BACKEND` a menos que modifiques los manifiestos de Kubernetes.
+
 1. Desplegar el Metrics Server (Obligatorio para Dashiell)
 > Al estar en un entorno MicroShift, requerimos el motor de métricas parcheado para TLS interno:
 
@@ -117,10 +133,6 @@ $ oc patch -n kube-system deployment metrics-server --type='json' -p='[{"op": "a
 $ cd precogs
 $ source ../chaos/venv/bin/activate
 ```
-+ Asegúrate de contar con u archivo `.env` configurado con:
-   * `TELEGRAM_TOKEN` y `TELEGRAM_CHAT_ID` (Para control vía ChatOps).
-   * `KUBECONFIG_PATH` (Ruta al clúster MicroShift).
-   * `ADMIN_EMAIL`, `SMTP_SERVER`, `SMTP_PORT`, `SMTP_USER`, y `SMTP_PASSWORD` (Para el envío de reportes Post-Mortem de Nivel 2).
 
 3. Energiza el Templo:
 
