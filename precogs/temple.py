@@ -20,6 +20,8 @@ load_dotenv()
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 ADMIN_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 KUBECONFIG = os.path.expanduser(os.getenv("KUBECONFIG_PATH", ""))
+TARGET_BACKEND = os.getenv("TARGET_BACKEND", "deployment/gaia-backend")
+TARGET_NAMESPACE = os.getenv("TARGET_NAMESPACE", "default")
 
 # Credenciales SMTP
 SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
@@ -44,7 +46,7 @@ def enviar_reporte_ejecutivo(accion, contexto, downtime):
 Se informa que se detectó y contuvo exitosamente un incidente crítico (Nivel 2) en el clúster Positronic-node.
 
 Detalles de la Afectación:
-- Objetivo: gaia-test
+- Objetivo: {TARGET_BACKEND} (Namespace: {TARGET_NAMESPACE})
 - Tiempo total de degradación (Nivel 2): {downtime:.2f} segundos
 - Evidencia del log: {contexto}
 
@@ -75,7 +77,8 @@ def escalar_humano(mensaje, contexto):
     estado_incidentes[ADMIN_CHAT_ID] = {"inicio": time.time(), "contexto": contexto}
     markup = types.InlineKeyboardMarkup(row_width=1)
     btn_ip = types.InlineKeyboardButton("🚫 Bloquear IP (NetworkPolicy)", callback_data="bloquear_ip")
-    btn_pod = types.InlineKeyboardButton("🔄 Reiniciar gaia-test", callback_data="reiniciar_pod")
+    nombre_pod = TARGET_BACKEND.split("/")[-1] # Extrae solo el nombre para que el botón no quede enorme
+    btn_pod = types.InlineKeyboardButton(f"🔄 Reiniciar {nombre_pod}", callback_data="reiniciar_pod")
     btn_abortar = types.InlineKeyboardButton("❌ Ignorar", callback_data="abortar")
     markup.add(btn_ip, btn_pod, btn_abortar)
     bot.send_message(ADMIN_CHAT_ID, f"{mensaje}\n\n*Últimos registros:*\n`{contexto}`", parse_mode="Markdown", reply_markup=markup)
@@ -93,8 +96,8 @@ def manejar_emergencia(call):
         elif call.data == "reiniciar_pod":
             bot.answer_callback_query(call.id, "Reiniciando pods...")
             try:
-                subprocess.run(["oc", "--kubeconfig", KUBECONFIG, "rollout", "restart", "deployment/gaia-test", "-n", "default"], check=True)
-                bot.edit_message_text("🔄 *Contención Activada:*\nDespliegue `gaia-test` reiniciado exitosamente.", chat_id=call.message.chat.id, message_id=call.message.message_id, parse_mode="Markdown")
+                subprocess.run(["oc", "--kubeconfig", KUBECONFIG, "rollout", "restart", TARGET_BACKEND, "-n", TARGET_NAMESPACE], check=True)
+                bot.edit_message_text(f"🔄 *Contención Activada:*\nDespliegue `{TARGET_BACKEND}` reiniciado exitosamente.", chat_id=call.message.chat.id, message_id=call.message.message_id, parse_mode="Markdown")
                 enviar_reporte_ejecutivo("Reinicio en caliente del despliegue (Rollout Restart)", incidente["contexto"], downtime)
             except Exception:
                 bot.send_message(ADMIN_CHAT_ID, "❌ Fallo al reiniciar el servicio.")
