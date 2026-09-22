@@ -37,12 +37,16 @@ def consultar_estado():
 
     return f"{icono} *Visión Precognitiva (Agatha)*\n\n*Nivel de Amenaza:* {amenaza}\n*Estado:* {status}"
 
+# Importa las variables al inicio de tus funciones (o globalmente debajo de load_dotenv si lo usas aquí)
 def solicitar_remediacion_multivac(contexto_errores):
+    target_backend = os.getenv("TARGET_BACKEND", "deployment/gaia-backend")
+    target_ns = os.getenv("TARGET_NAMESPACE", "default")
+
     logging.info("🧠 [Agatha] Contactando a Multivac...")
     prompt = f"""
     Eres Multivac, un agente de infraestructura. El sistema está bajo ataque.
     Analiza estos errores: {contexto_errores}.
-    Responde ÚNICAMENTE con el comando 'oc scale' necesario para escalar el despliegue 'gaia-test' a 3 réplicas en el namespace 'default'.
+    Responde ÚNICAMENTE con el comando 'oc scale' necesario para escalar {target_backend} a 3 réplicas en el namespace '{target_ns}'.
     No escribas explicaciones, no saludes, no des consejos. Solo el comando.
     """
     payload = {
@@ -63,8 +67,9 @@ def solicitar_remediacion_multivac(contexto_errores):
 
 def vision_precognitiva(callback_notificacion, callback_escalamiento):
     kubeconfig = os.path.expanduser(os.getenv("KUBECONFIG_PATH", ""))
-    cmd = ["oc", "--kubeconfig", kubeconfig, "logs", "deployment/gaia-test", "-f", "--tail=0"]
+    target_frontend = os.getenv("TARGET_FRONTEND", "deployment/gaia-frontend")
 
+    cmd = ["oc", "--kubeconfig", kubeconfig, "logs", target_frontend, "-f", "--tail=0"]
     ultimo_error = time.time()
 
     while True:
@@ -73,6 +78,7 @@ def vision_precognitiva(callback_notificacion, callback_escalamiento):
 
         try:
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
+            time.sleep(2)  # Freno táctico: evita el bucle infinito si el pod no existe o falla la conexión
         except FileNotFoundError:
             sys.exit(1)
 
