@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 KUBECONFIG = os.path.expanduser(os.getenv("KUBECONFIG_PATH", ""))
+NODE_IP = os.getenv("NODE_IP", "")
+SSH_KEY = os.path.expanduser(os.getenv("SSH_KEY_PATH", "../magrathea/labkey"))
 
 def generar_barra(porcentaje, longitud=10):
     try:
@@ -13,6 +15,20 @@ def generar_barra(porcentaje, longitud=10):
         return f"[{'█' * llenos}{'░' * vacios}] {p}%"
     except ValueError:
         return "[❓] N/A"
+
+def obtener_disco():
+    """Consulta vía SSH el porcentaje de uso de la partición raíz del nodo Edge."""
+    if not NODE_IP:
+        return "[❓] N/A"
+    try:
+        cmd = [
+            "ssh", "-i", SSH_KEY, "-o", "StrictHostKeyChecking=no",
+            f"positronic-user@{NODE_IP}", "df -h / | awk 'NR==2 {print $5}'"
+        ]
+        out = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout.strip()
+        return generar_barra(out)
+    except Exception:
+        return "[❓] Err"
 
 def obtener_rendimiento():
     try:
@@ -28,7 +44,9 @@ def obtener_rendimiento():
             nombre = partes[0]  # FQDN completo preservado
             cpu_bar = generar_barra(partes[2])
             mem_bar = generar_barra(partes[4])
-            reporte += f"🖥️ `{nombre}`\n  🧠 CPU: `{cpu_bar}`\n  💾 RAM: `{mem_bar}`\n\n"
+            disco_bar = obtener_disco()
+
+            reporte += f"🖥️ `{nombre}`\n  🧠 CPU:   `{cpu_bar}`\n  💾 RAM:   `{mem_bar}`\n  💽 DISCO: `{disco_bar}`\n\n"
 
         out_pods = subprocess.run(
             ["oc", "--kubeconfig", KUBECONFIG, "adm", "top", "pods", "-n", "default", "--no-headers"],
