@@ -40,7 +40,18 @@ $ ansible-playbook playbooks/02-deploy-daneel.yml -e "local_ip=<TU_IP> local_key
 
 Una vez que MicroShift está operando, desplegaremos la arquitectura de 4 capas simulando un entorno *Airgap* (sin depender de registros de contenedores externos).
 
-**Paso Cero: Construir la imagen local de la API**
+**Paso Cero: Mantenimiento Preventivo (Marvin)**
+
+*(Recomendado) Antes de inyectar imágenes, asegura que el nodo Edge tenga el almacenamiento en óptimas condiciones purgando artefactos residuales y bitácoras masivas.*
+
+```bash
+$ export NODE_IP=<TU_IP>
+$ ./scripts/05-maintenance-marvin.sh
+```
+
+Una vez que MicroShift está operando, desplegaremos la arquitectura de 4 capas simulando un entorno *Airgap* (sin depender de registros de contenedores externos).
+
+**Paso Uno: Construir la imagen local de la API**
 
 *(Este paso solo se ejecuta la primera vez, o si modificas el código en `app/backend/main.py`).*
 
@@ -51,16 +62,16 @@ $ podman save -o gaia-backend.tar localhost/gaia-backend:v1
 $ cd ../../magrathea/
 ```
 
-**Paso Uno: Inyectar la imagen al Nodo Positrónico**
+**Paso Dos: Inyectar la imagen al Nodo Positrónico**
 
 Transferimos el artefacto al almacenamiento nativo del nodo:
 
 ```bash
-$ scp -i ../labkey ../../app/backend/gaia-backend.tar positronic-user@<TU_IP>:~
-$ ssh -i ../labkey positronic-user@<TU_IP> "sudo podman load -i gaia-backend.tar"
+$ scp -i labkey ../app/backend/gaia-backend.tar positronic-user@<TU_IP>:~
+$ ssh -i labkey positronic-user@<TU_IP> "sudo podman load -i gaia-backend.tar"
 ```
 
-**Paso Dos: Levantar la topología (de adentro hacia afuera)**
+**Paso Tres: Levantar la topología (de adentro hacia afuera)**
 
 ```bash
 $ oc apply -f manifests/gaia/01-db-postgres.yml      # Capa 4: Persistencia (Términus)

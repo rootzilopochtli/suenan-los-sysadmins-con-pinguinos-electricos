@@ -61,6 +61,9 @@ Este proyecto no solo explora el futuro de la infraestructura, sino que rinde ho
 * **Magrathea (El Centro de Mando):**
   * **Ubicación:** Directorio principal de aprovisionamiento `/magrathea`.
   * **El Porqué:** Al igual que la mítica fábrica constructora de planetas, es donde ensamblamos infraestructuras complejas desde cero, guiados por el principio del 42 (el asterisco `*` en Bash/Ansible, el comodín que permite crear mundos enteros).
+* **Marvin (El Recolector de Basura):**
+  * **Ubicación:** Script de mantenimiento preventivo `scripts/05-maintenance-marvin.sh` en `/magrathea`.
+  * **El Porqué:** Bautizado en honor al androide paranoide con un cerebro del tamaño de un planeta, al que irónicamente obligamos a realizar tareas mundanas. En nuestra arquitectura, Marvin se encarga de recolectar basura, purgar imágenes huérfanas y truncar bitácoras masivas de MicroShift para evitar que el pequeño nodo Edge colapse por asfixia de almacenamiento (DiskPressure).
 
 ### 🚀 Andy Weir
 
