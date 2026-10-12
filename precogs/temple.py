@@ -1,3 +1,8 @@
+"""
+Autor: Alex Callejas (@rootzilopochtli)
+Proyecto: PositronicOps
+Descripción: Temple - Orquestador Central y API Gateway de Telegram
+"""
 import logging
 import os
 import random
@@ -83,6 +88,12 @@ def escalar_humano(mensaje, contexto):
     markup.add(btn_ip, btn_pod, btn_abortar)
     bot.send_message(ADMIN_CHAT_ID, f"{mensaje}\n\n*Últimos registros:*\n`{contexto}`", parse_mode="Markdown", reply_markup=markup)
 
+def escalar_humano_critico(contexto):
+    """Notifica fallos estructurales críticos de pre-vuelo sin interactividad."""
+    mensaje = "🛑 *ERROR CRÍTICO (Pre-vuelo):* La infraestructura base no logró inicializarse."
+    alerta_limpia = f"{mensaje}\n\n*Diagnóstico Rápido:*\n{contexto}\n\n_Se requiere intervención manual del SRE mediante acceso SSH o consola._"
+    bot.send_message(ADMIN_CHAT_ID, alerta_limpia, parse_mode="Markdown")
+
 @bot.callback_query_handler(func=lambda call: True)
 def manejar_emergencia(call):
     if str(call.message.chat.id) == ADMIN_CHAT_ID:
@@ -139,11 +150,8 @@ def cmd_status(message):
 def cmd_auditoria(message):
     """Arthur: Inferencia histórica de logs vía RAG."""
     if str(message.chat.id) == ADMIN_CHAT_ID:
-        # Registramos formalmente el evento en la bitácora para sincronizar el timestamp del cursor
         logging.info("🧠 [Arthur] Auditoría manual solicitada por el Administrador.")
-
         msg_temp = bot.reply_to(message, "🧠 [Arthur] Consultando la memoria histórica y procesando inferencia...")
-
         analisis = arthur.analizar_historial()
 
         bot.edit_message_text(
@@ -199,7 +207,6 @@ def cmd_nivel1(message):
             return
 
         def traducir_accion(comando):
-            """Mapea comandos crudos a explicaciones ejecutivas."""
             cmd = comando.lower()
             if "scale deployment" in cmd:
                 return "Escalamiento automático de réplicas para absorber pico de tráfico."
@@ -221,10 +228,7 @@ def cmd_nivel1(message):
                     if i + 1 < len(lineas):
                         accion = lineas[i+1].strip()
                         accion = accion.replace("'", "").replace('"', "").replace('`', '').replace('*', '').replace('_', '')
-
-                        # Generamos la "carnita"
                         explicacion = traducir_accion(accion)
-
                         incidentes.append((timestamp, accion, explicacion))
                 except Exception:
                     continue
@@ -341,10 +345,11 @@ def bofh_catch_all(message):
         logging.warning(f"Intento de comando BOFH interceptado: {message.text}")
         bot.reply_to(message, random.choice(respuestas_bofh), parse_mode="Markdown")
 
+
 if __name__ == "__main__":
     logging.info("🏛️ [Temple] Energizando núcleo. Iniciando ecosistema...")
 
-    hilo_agatha = threading.Thread(target=agatha.vision_precognitiva, args=(enviar_alerta, escalar_humano), daemon=True)
+    hilo_agatha = threading.Thread(target=agatha.vision_precognitiva, args=(enviar_alerta, escalar_humano, escalar_humano_critico), daemon=True)
     hilo_agatha.start()
 
     logging.info("🤖 [Andrew/Arthur] Modulando frecuencias. A la espera de directivas...")
