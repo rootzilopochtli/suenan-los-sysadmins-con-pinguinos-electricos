@@ -56,6 +56,18 @@ graph TD
 Para evitar la ejecución de scripts aislados, el ecosistema se centraliza a través de `temple.py`.
 Este orquestador utiliza hilos (threading) para mantener a las distintas entidades de IA operando simultáneamente dentro de un solo proceso, actuando como el _API Gateway_ hacia Telegram.
 
+**Comandos Operativos Soportados:**
+* `/status` - Estado en vivo de contenedores (Dashiell).
+* `/perf` - Telemetría de consumo CPU/RAM (Dashiell).
+* `/agatha` - Consulta el nivel de amenaza y estado del pre-vuelo.
+* `/auditoria` - Análisis RAG de la línea temporal (Arthur).
+* `/nivel1` - Bitácora de auto-remediaciones tácticas aplicadas.
+* `/baneados` - Muro de la vergüenza (Registro de comandos interceptados).
+* `/resumen` - Dashboard ejecutivo global de defensas.
+* `/ping` - Verificación rápida de enlace de red.
+
+*(Nota: Temple incluye un escudo BOFH que interceptará, bloqueará y registrará cualquier intento de comando no autorizado o destructivo).*
+
 ## 🔮 Agatha: La Precog Principal (Vigilancia) `agatha.py`
 
 Agatha actúa como nuestra centinela. Su misión no es reportar una caída post-mortem, sino predecir el colapso.
@@ -63,6 +75,10 @@ Agatha actúa como nuestra centinela. Su misión no es reportar una caída post-
 - **Observabilidad en Tiempo Real**: Se sumerge directamente en el flujo de logs del Ingress (Nginx).
 
 - **Detección de Anomalías**: Caza patrones críticos de asfixia en la red, específicamente los códigos `499` (conexiones cerradas por el cliente) y bloqueos `50x`.
+
+El módulo de Agatha ha sido reforzado con capacidades de supervivencia base:
+* **Fase de Pre-vuelo:** Antes de iniciar la lectura de métricas de red, valida el estado del nodo y de las réplicas. Si detecta una saturación de disco (>= 95%), invoca de forma autónoma el script de mantenimiento (Marvin) para purgar el almacenamiento y evitar el estado `DiskPressure`.
+* **Filtro de Ruido:** Ignora las peticiones a `favicon.ico` del Nginx para evitar el disparo de falsos positivos en el umbral de amenaza.
 
 - **Matriz de Defensa SRE**:
     - **Nivel 1 (Autónomo)**: Consulta a Multivac para ejecutar comandos estabilizadores (ej. escalar réplicas) sin intervención humana.
