@@ -61,10 +61,6 @@ def solicitar_remediacion_multivac(contexto_errores):
         "stream": False
     }
 
-# ## 2. Inferencia Local: La Sinapsis.
-# Agatha consulta a Multivac (Ollama).
-# Request 100% local (localhost:11434). Cero nube pública.
-
     try:
         response = requests.post(MULTIVAC_URL, json=payload, timeout=30)
         response.raise_for_status()
@@ -260,10 +256,6 @@ def vision_precognitiva(callback_notificacion, callback_escalamiento, callback_e
                     estado_actual["status"] = "Sumergida en el tanque. Clúster estable."
                     error_count = 0
 
-# ## 1. Observabilidad: Sentido Arácnido.
-# Python lee el stream de logs en tiempo real cazando ráfagas 404.
-# (Sin depender de un stack pesado como ELK/Prometheus).
-
                 if re.search(r' (404|499|50[234]) ', line):
                     ultimo_error = time.time()
                     error_count += 1
@@ -303,10 +295,6 @@ def vision_precognitiva(callback_notificacion, callback_escalamiento, callback_e
                             process.wait()
                             time.sleep(30)
                             break
-
-# ## 3. Guardrails: El Freno de Emergencia.
-# Límite ético de la IA: Si el fuego no cede tras la remediación,
-# pausa la automatización y cede el control al humano (Nivel 2).
 
                         else:
                             estado_actual["status"] = "Ataque sostenido. Control cedido al usuario (Nivel 2)."
