@@ -18,7 +18,9 @@ if [ -z "$NODE_IP" ]; then
     exit 1
 fi
 
-SSH_KEY="labkey"
+# Resolución dinámica de la ruta para la llave SSH
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+SSH_KEY="${SCRIPT_DIR}/../labkey"
 USER="positronic-user"
 
 echo -e "${YELLOW}##########################################################${NC}"
@@ -26,9 +28,9 @@ echo -e "${YELLOW}#   MARVIN: Iniciando protocolo de recolección de basura #${N
 echo -e "${YELLOW}##########################################################${NC}"
 echo -e "Conectando al nodo positrónico en $NODE_IP...\n"
 
-ssh -i "$SSH_KEY" "$USER@$NODE_IP" << 'EOF'
+ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$USER@$NODE_IP" << 'EOF'
     echo -e "1. Purgando artefactos huérfanos de Podman..."
-    sudo podman system prune -a -f > /dev/null 2>&1
+    sudo podman system prune -f > /dev/null 2>&1
 
     echo -e "2. Limpiando imágenes sin uso en CRI-O..."
     sudo crictl rmi --prune > /dev/null 2>&1
@@ -51,4 +53,3 @@ ssh -i "$SSH_KEY" "$USER@$NODE_IP" << 'EOF'
 EOF
 
 echo -e "\n${GREEN}[OK] Marvin ha terminado. El nodo está listo para el estrés.${NC}"
-
