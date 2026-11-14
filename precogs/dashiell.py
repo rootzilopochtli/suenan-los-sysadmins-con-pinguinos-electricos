@@ -14,7 +14,7 @@ def generar_barra(porcentaje, longitud=10):
         vacios = longitud - llenos
         return f"[{'█' * llenos}{'░' * vacios}] {p}%"
     except ValueError:
-        return "[❓] N/A"
+        return f"[❓] {porcentaje}"
 
 def obtener_disco():
     """Consulta vía SSH el porcentaje de uso de la partición raíz del nodo Edge."""
@@ -31,29 +31,33 @@ def obtener_disco():
         return "[❓] Err"
 
 def obtener_rendimiento():
+    reporte = "📈 *Rendimiento del Clúster (MicroShift)*\n\n*Infraestructura Base:*\n"
+    disco_bar = obtener_disco()
     try:
         out_nodos = subprocess.run(
             ["oc", "--kubeconfig", KUBECONFIG, "adm", "top", "nodes", "--no-headers"],
             capture_output=True, text=True, check=True
         ).stdout.strip().split('\n')
 
-        reporte = "📈 *Rendimiento del Clúster (MicroShift)*\n\n*Infraestructura Base:*\n"
         for linea in out_nodos:
             if not linea: continue
             partes = linea.split()
-            nombre = partes[0]  # FQDN completo preservado
+            nombre = partes[0]
             cpu_bar = generar_barra(partes[2])
             mem_bar = generar_barra(partes[4])
-            disco_bar = obtener_disco()
-
             reporte += f"🖥️ `{nombre}`\n  🧠 CPU:   `{cpu_bar}`\n  💾 RAM:   `{mem_bar}`\n  💽 DISCO: `{disco_bar}`\n\n"
 
+    except subprocess.CalledProcessError as e:
+        reporte += f"🖥️ `{NODE_IP}`\n  🧠 CPU:   `[❓] N/A`\n  💾 RAM:   `[❓] N/A`\n  💽 DISCO: `{disco_bar}`\n"
+        reporte += f"⚠️ _Métricas de CPU/RAM aún no disponibles: {e.stderr.strip()}_ \n\n"
+
+    reporte += "*Despliegues (Namespace: default):*\n"
+    try:
         out_pods = subprocess.run(
             ["oc", "--kubeconfig", KUBECONFIG, "adm", "top", "pods", "-n", "default", "--no-headers"],
             capture_output=True, text=True, check=True
         ).stdout.strip().split('\n')
 
-        reporte += "*Despliegues (Namespace: default):*\n"
         for linea in out_pods:
             if not linea: continue
             partes = linea.split()
@@ -62,9 +66,10 @@ def obtener_rendimiento():
             mem = partes[2]
             reporte += f"📦 `{nombre}`\n  ⚙️ CPU: `{cpu}` | 🗄️ RAM: `{mem}`\n\n"
 
-        return reporte.strip()
-    except Exception as e:
-        return f"❌ [Dashiell] Interferencia en la telemetría: {e}"
+    except subprocess.CalledProcessError as e:
+        reporte += f"⚠️ _Métricas de Pods no disponibles: {e.stderr.strip()}_\n"
+
+    return reporte.strip()
 
 def obtener_estado_pods():
     """Extrae y formatea el estado de los pods (Gaia) con semáforos visuales."""
@@ -87,7 +92,6 @@ def obtener_estado_pods():
             restarts = partes[3]
             age = partes[4]
 
-            # Inyección de observabilidad visual
             icono = "🟢" if status == "Running" else "🟡" if status in ["Pending", "ContainerCreating"] else "🔴"
 
             reporte += f"📦 `{nombre}`\n"

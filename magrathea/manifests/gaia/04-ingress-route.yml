@@ -1,0 +1,14 @@
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: gaia-gateway
+  labels:
+    app: gaia-frontend
+spec:
+  host: gaia.positronic.local
+  to:
+    kind: Service
+    name: gaia-frontend-service
+  port:
+    targetPort: 8080
