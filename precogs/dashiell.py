@@ -32,6 +32,7 @@ def obtener_disco():
 
 def obtener_rendimiento():
     reporte = "📈 *Rendimiento del Clúster (MicroShift)*\n\n*Infraestructura Base:*\n"
+    disco_bar = obtener_disco()
     try:
         out_nodos = subprocess.run(
             ["oc", "--kubeconfig", KUBECONFIG, "adm", "top", "nodes", "--no-headers"],
