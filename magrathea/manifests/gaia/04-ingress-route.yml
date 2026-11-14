@@ -1,0 +1,16 @@
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: gaia-gateway
+  labels:
+    app: gaia-frontend
+spec:
+  # El dominio a través del cual accederemos desde la laptop
+  host: gaia.positronic.local
+  to:
+    kind: Service
+    name: gaia-frontend-service
+  port:
+    # Nginx está escuchando internamente en el 8080
+    targetPort: 8080

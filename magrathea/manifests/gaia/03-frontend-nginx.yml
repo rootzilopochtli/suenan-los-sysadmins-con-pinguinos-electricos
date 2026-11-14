@@ -1,0 +1,252 @@
+---
+# 1. Configuración de Nginx y Dashboard (ConfigMap)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gaia-frontend-config
+  labels:
+    app: gaia-frontend
+data:
+  # Configuración del Proxy Inverso adaptada para UBI9 sin privilegios
+  nginx.conf: |
+    worker_processes auto;
+    error_log /dev/stdout info;
+    pid /tmp/nginx.pid;
+
+    events {
+        worker_connections 1024;
+    }
+
+    http {
+        access_log /dev/stdout;
+        include /etc/nginx/mime.types;
+        default_type application/octet-stream;
+
+        # Rutas temporales para que Nginx no intente escribir en /var/lib/nginx
+        client_body_temp_path /tmp/client_body;
+        fastcgi_temp_path /tmp/fastcgi_temp;
+        proxy_temp_path /tmp/proxy_temp;
+        scgi_temp_path /tmp/scgi_temp;
+        uwsgi_temp_path /tmp/uwsgi_temp;
+
+        server {
+            listen 8080;
+            server_name _;
+
+            # 1. Servir el Dashboard HTML
+            location / {
+                root /opt/app-root/src;
+                index index.html;
+            }
+
+            # 2. Proxy Inverso hacia FastAPI (Capa 3)
+            location /api/ {
+                # Importante: Reescribimos la URI para quitar el /api/ antes de pasarlo al backend
+                rewrite ^/api/(.*)$ /$1 break;
+                proxy_pass http://gaia-backend-service:8000;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+            }
+        }
+    }
+
+  # El Dashboard de PositronicOps
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>The Cosmic Grill - PositronicOps</title>
+        <style>
+            :root {
+                --neon-cyan: #0ff;
+                --neon-red: #ff003c;
+                --diner-bg: #f3e5d8;
+            }
+            body {
+                font-family: 'Courier New', Courier, monospace;
+                background-color: var(--diner-bg);
+                background-image: repeating-linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000), repeating-linear-gradient(45deg, #000 25%, var(--diner-bg) 25%, var(--diner-bg) 75%, #000 75%, #000);
+                background-position: 0 0, 20px 20px;
+                background-size: 40px 40px;
+                color: #333;
+                margin: 0;
+                padding: 20px;
+                display: flex;
+                justify-content: center;
+            }
+            .menu-container {
+                background-color: rgba(255, 255, 255, 0.95);
+                border: 4px solid var(--neon-cyan);
+                border-radius: 15px;
+                padding: 30px;
+                max-width: 600px;
+                text-align: center;
+                box-shadow: 0 0 20px var(--neon-cyan);
+            }
+            h1 {
+                font-family: 'Arial Black', sans-serif;
+                color: var(--neon-red);
+                text-shadow: 2px 2px 0px #000, 0 0 10px var(--neon-red);
+                text-transform: uppercase;
+                letter-spacing: 2px;
+                margin-bottom: 5px;
+            }
+            h3 {
+                color: #555;
+                margin-top: 0;
+                border-bottom: 2px dashed #ccc;
+                padding-bottom: 10px;
+            }
+            .menu-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin: 20px 0;
+                padding: 10px;
+                background: #fff;
+                border: 2px solid #ccc;
+                border-radius: 8px;
+            }
+            .item-details { text-align: left; }
+            .item-name { font-weight: bold; font-size: 1.2em; color: #222; }
+            .item-price { color: var(--neon-red); font-weight: bold; }
+            .btn-pedir {
+                background-color: var(--neon-cyan);
+                color: #000;
+                border: 2px solid #000;
+                padding: 10px 20px;
+                font-size: 1em;
+                font-weight: bold;
+                cursor: pointer;
+                text-transform: uppercase;
+                transition: all 0.2s;
+                box-shadow: 3px 3px 0 #000;
+            }
+            .btn-pedir:active {
+                box-shadow: 0 0 0 #000;
+                transform: translate(3px, 3px);
+            }
+            #status-terminal {
+                margin-top: 20px;
+                background: #111;
+                color: #0f0;
+                padding: 10px;
+                border-radius: 5px;
+                font-size: 0.9em;
+                min-height: 20px;
+            }
+        </style>
+    </head>
+    <body>
+
+    <div class="menu-container">
+        <h1>The Cosmic Grill</h1>
+        <h3>Atendido por Multivac</h3>
+
+        <div class="menu-item">
+            <div class="item-details">
+                <div class="item-name">Hamburguesa Positrónica</div>
+                <div class="item-price">3.50 Créditos</div>
+            </div>
+            <button class="btn-pedir" onclick="enviarPedido('hamburguesa')">Pedir</button>
+        </div>
+
+        <div class="menu-item">
+            <div class="item-details">
+                <div class="item-name">Malteada de Fusión Fria</div>
+                <div class="item-price">1.25 Créditos</div>
+            </div>
+            <button class="btn-pedir" onclick="enviarPedido('malteada')">Pedir</button>
+        </div>
+
+        <div id="status-terminal">> Esperando comandas...</div>
+    </div>
+
+    <script>
+        function enviarPedido(item) {
+            const terminal = document.getElementById('status-terminal');
+            terminal.innerHTML = `> Procesando pedido: ${item}...`;
+
+            // Apunta al endpoint de FastAPI (Capa 3)
+            fetch(`/api/pedir?item=${item}`)
+                .then(response => {
+                    if(response.ok) {
+                        terminal.innerHTML = `> [ÉXITO] ${item} enviado a la parrilla.`;
+                    } else {
+                        terminal.innerHTML = `> [ERROR] Multivac reporta saturación en la cocina.`;
+                    }
+                })
+                .catch(error => {
+                    terminal.innerHTML = `> [CRÍTICO] Falla de comunicación con el núcleo.`;
+                });
+        }
+    </script>
+
+    </body>
+    </html>
+
+---
+# 2. El Despliegue de Nginx (Capa 2)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gaia-frontend
+  labels:
+    app: gaia-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gaia-frontend
+  template:
+    metadata:
+      labels:
+        app: gaia-frontend
+    spec:
+      containers:
+        - name: nginx
+          image: registry.access.redhat.com/ubi9/nginx-122
+          # --- AGREGAR ESTAS LÍNEAS PARA ANULAR EL SCRIPT S2I ---
+          command: ["nginx"]
+          args: ["-g", "daemon off;"]
+          # ------------------------------------------------------
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+            - name: html-volume
+              mountPath: /opt/app-root/src/index.html
+              subPath: index.html
+      volumes:
+        - name: config-volume
+          configMap:
+            name: gaia-frontend-config
+            items:
+              - key: nginx.conf
+                path: nginx.conf
+        - name: html-volume
+          configMap:
+            name: gaia-frontend-config
+            items:
+              - key: index.html
+                path: index.html
+
+---
+# 3. El Servicio Interno de Nginx
+apiVersion: v1
+kind: Service
+metadata:
+  name: gaia-frontend-service
+  labels:
+    app: gaia-frontend
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 8080
+  selector:
+    app: gaia-frontend
