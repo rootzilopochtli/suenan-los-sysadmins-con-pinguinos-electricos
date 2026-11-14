@@ -1,5 +1,4 @@
 ---
-# 1. La Granja de Procesamiento (El Backend)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -19,11 +18,10 @@ spec:
       containers:
         - name: fastapi
           image: localhost/gaia-backend:v1
-          imagePullPolicy: Never  # <-- Fundamental: Le dice a K8s que no busque en internet, que use la caché local
+          imagePullPolicy: Never
           ports:
             - containerPort: 8000
           env:
-            # Mapeamos las llaves del Secreto de Bitnami a las variables que Python espera
             - name: DB_USER
               valueFrom:
                 secretKeyRef:
@@ -50,7 +48,6 @@ spec:
               cpu: "250m"
 
 ---
-# 2. El Servicio Interno
 apiVersion: v1
 kind: Service
 metadata:

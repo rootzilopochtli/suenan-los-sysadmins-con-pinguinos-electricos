@@ -1,5 +1,4 @@
 ---
-# 1. Configuración de Nginx y Dashboard (ConfigMap)
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -7,7 +6,6 @@ metadata:
   labels:
     app: gaia-frontend
 data:
-  # Configuración del Proxy Inverso adaptada para UBI9 sin privilegios
   nginx.conf: |
     worker_processes auto;
     error_log /dev/stdout info;
@@ -50,7 +48,6 @@ data:
         }
     }
 
-  # El Dashboard de PositronicOps
   index.html: |
     <!DOCTYPE html>
     <html lang="es">
@@ -188,7 +185,6 @@ data:
     </html>
 
 ---
-# 2. El Despliegue de Nginx (Capa 2)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -208,10 +204,8 @@ spec:
       containers:
         - name: nginx
           image: registry.access.redhat.com/ubi9/nginx-122
-          # --- AGREGAR ESTAS LÍNEAS PARA ANULAR EL SCRIPT S2I ---
           command: ["nginx"]
           args: ["-g", "daemon off;"]
-          # ------------------------------------------------------
           ports:
             - containerPort: 8080
           volumeMounts:
@@ -236,7 +230,6 @@ spec:
                 path: index.html
 
 ---
-# 3. El Servicio Interno de Nginx
 apiVersion: v1
 kind: Service
 metadata:
