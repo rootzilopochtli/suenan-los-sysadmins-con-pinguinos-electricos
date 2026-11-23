@@ -2,7 +2,9 @@
 
 # 🐧🤖 ¿Sueñan los SysAdmins con pingüinos eléctricos?
 
-![Status](https://img.shields.io/badge/status-en%20desarrollo-orange)
+![Version](https://img.shields.io/badge/version-2.0.0-brightgreen)
+![Platform](https://img.shields.io/badge/CentOS%20Stream-10-a14f8c)
+![Airgap](https://img.shields.io/badge/Edge-100%25%20Airgap-blue)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 **Tareas en Linux asistidas con IA (Soberanía y Automatización en el Edge)**
@@ -12,6 +14,18 @@
 > — Ezequiel Lanza & Eduardo Spotti
 
 Repositorio oficial del proyecto y laboratorio abierto sobre la evolución de la administración de sistemas. Diseñado como una prueba de concepto itinerante para demostrar el paso de la automatización estática a la resolución dinámica con Inteligencia Artificial.
+
+## ✨ Novedades en PositronicOps v2.0 (CentOS Stream 10)
+
+Esta versión evoluciona el prototipo original del PyDay hacia una arquitectura abierta, determinista y validada en modo **100% Airgap**:
+
+* **CentOS Stream 10 + MicroShift *upstream*:** 100% reproducible sin suscripciones cerradas. *(La versión original de RHEL 9 permanece respaldada en la rama [`legacy/rhel9`](../../tree/legacy/rhel9) y en los tags `v1.0.x`).*
+* **Defensa en 3 Niveles:** Nivel 0 nativo en Kubernetes (`livenessProbe`, `readinessProbe`, `HPA`), Nivel 1 con **Agatha** multihilo (reflejos deterministas 0% LLM + respaldo cognitivo local) y Nivel 2 con freno ético humano vía Telegram y reportes SMTP.
+* **ASD-STE100 + JSON Schema:** Inferencia local determinista (`temperature: 0.0`) con `qwen2.5-coder:1.5b` en Ollama bajo lista blanca de acciones (`enum`).
+* **Arthur v2.0 (RAG Offline):** Memoria episódica estructurada (`episodic_memory.jsonl`) y consultas `/rag <pregunta>` sin bases vectoriales pesadas.
+* **Marvin Airgap-Safe (`/marvin`):** Limpieza de disco e inodos bajo demanda sin eliminar imágenes locales etiquetadas.
+
+Ver detalle técnico completo en [`precogs/README.md`](precogs/README.md) y [`CHANGELOG.md`](CHANGELOG.md).
 
 ## 🚀 El Concepto
 

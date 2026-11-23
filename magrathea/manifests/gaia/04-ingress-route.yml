@@ -6,9 +6,11 @@ metadata:
   labels:
     app: gaia-frontend
 spec:
-  host: gaia.positronic.local
+  # El dominio a través del cual accederemos desde la laptop
+  host: gaia.positronic-c.local
   to:
     kind: Service
     name: gaia-frontend-service
   port:
+    # Nginx está escuchando internamente en el 8080
     targetPort: 8080

@@ -2,13 +2,13 @@
 # set -x
 # provision_edge_kvm.sh - Aprovisionamiento seguro para Daneel
 # Autor: Alex Callejas (@rootzilopochtli)
-# version 1.0: Actual release
+# version 2.0: CentOS release
 
 # --- Configuración Estática ---
-TARGET_IMG="psnode.qcow2"
+TARGET_IMG="psnodec.qcow2"
 KVM_DIR="/var/lib/libvirt/images"
-VM_NAME="positronic-node"
-HOSTNAME="positronic.lab.rootzilopochtli.com"
+VM_NAME="positronic-node-c"
+HOSTNAME="positronic-c.lab.rootzilopochtli.com"
 
 # --- Variables de Usuario ---
 LAB_USER="positronic-user"  # Identidad local para el Fedora-Edge Lab
@@ -105,10 +105,11 @@ sudo virt-install \
     --name "$VM_NAME" \
     --memory 8196 \
     --vcpus 2 \
+    --network network=default,model=virtio \
     --disk "$KVM_DIR/$TARGET_IMG",bus=virtio,target=vda,boot_order=1 \
     --disk size=10,format=qcow2,bus=virtio,target=vdb \
     --import \
-    --osinfo rhel9.0 \
+    --osinfo centos-stream9 \
     --noautoconsole
 
 # --- Obtención de IP con Polling Loop ---
@@ -140,9 +141,9 @@ else
         # --- NUEVO BLOQUE: Inyección de DNS Local ---
     echo "🌐 Actualizando /etc/hosts con el dominio de Gaia..."
     # 1. Eliminamos cualquier registro anterior (limpieza preventiva)
-    sudo sed -i '/gaia\.positronic\.local/d' /etc/hosts
+    sudo sed -i '/gaia\.positronic-c\.local/d' /etc/hosts
     # 2. Inyectamos la IP actual
-    echo "$VM_IP   gaia.positronic.local # PositronicOps" | sudo tee -a /etc/hosts > /dev/null
+    echo "$VM_IP   gaia.positronic-c.local # PositronicOps" | sudo tee -a /etc/hosts > /dev/null
     # --------------------------------------------
 
     echo "--------------------------------------------------------------------------"

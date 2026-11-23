@@ -1,160 +1,124 @@
-# 👁️ Precogs: Observabilidad Predictiva y AIOps
+# 👁️ Precogs v2.0: Observabilidad Predictiva, SysAdmin Autónoma y RAG Offline
 
-En *Minority Report* de Philip K. Dick, los "Precogs" son mutantes capaces de ver los crímenes antes de que sucedan. En nuestra arquitectura, el directorio `/precogs` es el sistema nervioso central de operaciones, diseñado para detectar el colapso de la infraestructura antes de que el usuario final lo perciba.
+En *Minority Report* de Philip K. Dick, los "Precogs" ven los crímenes antes de que sucedan. En **PositronicOps v2.0**, el directorio `/precogs` es el sistema nervioso central de operaciones: combina reflejos deterministas de SysAdmin, inferencia local acotada (**ASD-STE100 + JSON Schema**) y memoria episódica sobre **CentOS Stream 10 + MicroShift** en modo *Airgap*.
 
-Aquí convergen la administración de sistemas tradicional, el Edge Computing y la Inteligencia Artificial Generativa para crear un bucle de control autónomo (Control Loop).
-
-## 🌌 Topología de la Solución
-
-El siguiente diagrama ilustra cómo interactúan nuestros agentes con el nodo positrónico (MicroShift) y el motor de IA (Multivac) bajo la nueva estructura centralizada:
+## 🌌 Topología de la Solución (v2.0)
 
 ```mermaid
-graph TD
-    subgraph "MicroShift (positronic-node)"
+flowchart LR
+    MULO["💥 El Mulo<br/>(Locust Chaos)"]
+
+    subgraph EDGE["🐧 Nodo Edge: CentOS Stream 10 + MicroShift (100% Airgap)"]
         direction TB
-        I[Ingress Route<br/>gaia.positronic.local] --> F[Gaia Frontend<br/>Nginx]
+        ROUTE["Ingress Route<br/>gaia.positronic-c.local"]
+        NGINX["Gaia Frontend<br/>Nginx (IfNotPresent)"]
 
-        subgraph "Deployment: gaia-backend"
-            F --> B1[FastAPI Pod 1]
-            F --> B2[FastAPI Pod N...]
-        end
-
-        B1 --> D[(PostgreSQL<br/>Database)]
-        B2 --> D
-    end
-
-    subgraph "Host (calvin-node)"
-        direction TB
-
-        subgraph "El Templo (temple.py)"
+        subgraph N0["🟢 Nivel 0: Supervivencia Nativa (K8s)"]
             direction LR
-            AG[Agatha<br/>Vigilancia]
-            AR[Arthur<br/>Memoria RAG]
-            DA[Dashiell<br/>Métricas]
-            AW[Andrew<br/>ChatOps SRE]
+            BACKEND["Gaia Backend (FastAPI)<br/>Probes: /health & /status/db"]
+            HPA["HPA<br/>1 → 5 réplicas"]
+            HPA -.->|"CPU > 75%"| BACKEND
         end
 
-        M[Multivac<br/>Ollama LLM]
-        TG[Telegram API / SMTP Server]
+        DB[("Términus<br/>PostgreSQL StatefulSet")]
+        OS["Host Linux<br/>Systemd + Disco/Inodos"]
 
-        AG -- Lee Logs --> F
-        AG -- Predice y Consulta --> M
-        M -- Inyecta Comando --> B1
-
-        AR -- Analiza Historial --> AG
-        DA -- Monitorea Rendimiento --> B1
-
-        AW -- Botones / Alertas --> TG
-        AW -- Interfaz BOFH --> TG
+        ROUTE --> NGINX --> BACKEND --> DB
     end
 
-    C[El Mulo<br/>Locust DDoS] -- Ataca --> I
+    subgraph HOST["🏛️ Host Administrativo (calvin-node)"]
+        direction TB
+
+        subgraph N1["🟡 Nivel 1: El Templo (temple.py) — AIOps Local"]
+            direction TB
+            AG["🔮 Agatha (SysAdmin)<br/>Logs Nginx + Hilo 60s"]
+            MARVIN["🧹 Marvin<br/>Limpieza Airgap-Safe"]
+            LLM["⚡ Multivac (Ollama)<br/>qwen2.5-coder:1.5b<br/>STE-100 + JSON Schema"]
+            MEM[("📜 episodic_memory.jsonl<br/>Memoria STE-100")]
+            AR["🧠 Arthur<br/>/auditoria & /rag"]
+            DA["📊 Dashiell<br/>/status & /perf (Read-Only)"]
+        end
+
+        AW["🤖 Andrew<br/>ChatOps + Escudo BOFH"]
+    end
+
+    subgraph N2["🔴 Nivel 2: Freno Ético Humano"]
+        direction TB
+        TG["📱 Telegram + 📧 SMTP<br/>Botones & Post-Mortem"]
+        SRE["👤 SRE Humano"]
+        TG <--> SRE
+    end
+
+    MULO -->|"Ataque HTTP"| ROUTE
+    NGINX -.->|"Stream logs"| AG
+    OS -.->|"Telemetría SSH"| AG
+    OS -.->|"oc top / df"| DA
+
+    AG -->|"Reflejo 0% LLM"| MARVIN
+    MARVIN -->|"Purga segura"| OS
+    AG <-->|"Prompt STE-100<br/>JSON enum"| LLM
+    AG -->|"oc scale / restart"| BACKEND
+
+    AG -->|"Registra episodio"| MEM
+    MEM -->|"RAG bilingüe"| AR
+    AR <-->|"Síntesis"| LLM
+
+    AG -->|"Ataque persistente"| AW
+    AR --> AW
+    DA --> AW
+    AW <-->|"Alertas / Botones"| TG
+
+    classDef chaos fill:#4a1019,stroke:#ff4d6d,stroke-width:2px,color:#fff;
+    classDef n0 fill:#0d3b26,stroke:#2ec4b6,stroke-width:2px,color:#fff;
+    classDef n1 fill:#1b263b,stroke:#4ea8de,stroke-width:2px,color:#fff;
+    classDef llm fill:#3c1642,stroke:#c77dff,stroke-width:2px,color:#fff;
+    classDef n2 fill:#590d22,stroke:#ff758f,stroke-width:2px,color:#fff;
+
+    class MULO chaos;
+    class BACKEND,HPA n0;
+    class AG,MARVIN,AR,DA,AW n1;
+    class LLM,MEM llm;
+    class TG,SRE n2;
 ```
+
+## 🛡️ Defensa en 3 Niveles
+
+1. **Nivel 0 — Supervivencia Nativa (Kubernetes):** `livenessProbe` (`/health`), `readinessProbe` (`/status/db`) y `HPA` (1 → 5 réplicas) absorben carga y fallas triviales sin quemar tokens.
+2. **Nivel 1 — SysAdmin Autónoma (Agatha + Multivac):**
+   - **Reflejos deterministas (0% LLM):** Saturación de disco/inodos (≥ 90%) invoca a Marvin; caída de `microshift`/`crio` dispara `systemctl`.
+   - **Respaldo cognitivo local:** Ante patrones ambiguos, consulta a `qwen2.5-coder:1.5b` (Ollama) con instrucciones **ASD-STE100**, `temperature: 0.0` y **JSON Schema (`format`)** con lista blanca de acciones (`enum`). *El LLM propone; Python valida y dispone.*
+3. **Nivel 2 — Freno Ético Humano (Andrew / Telegram + SMTP):** Si una anomalía sobrevive al periodo de gracia, la IA se detiene, despliega botones de contención interactivos y envía el reporte post-mortem por correo electrónico.
 
 ## 🏛️ Temple: El Orquestador Central (`temple.py`)
 
-Para evitar la ejecución de scripts aislados, el ecosistema se centraliza a través de `temple.py`.
-Este orquestador utiliza hilos (threading) para mantener a las distintas entidades de IA operando simultáneamente dentro de un solo proceso, actuando como el _API Gateway_ hacia Telegram.
+Centraliza el ecosistema mediante hilos sincronizados (`threading.Lock`) y actúa como API Gateway hacia Telegram con escudo BOFH integrado.
 
 **Comandos Operativos Soportados:**
 * `/status` - Estado en vivo de contenedores (Dashiell).
-* `/perf` - Telemetría de consumo CPU/RAM (Dashiell).
-* `/agatha` - Consulta el nivel de amenaza y estado del pre-vuelo.
-* `/auditoria` - Análisis RAG de la línea temporal (Arthur).
-* `/nivel1` - Bitácora de auto-remediaciones tácticas aplicadas.
-* `/baneados` - Muro de la vergüenza (Registro de comandos interceptados).
+* `/perf` - Telemetría de CPU, RAM y Disco físico (Dashiell).
+* `/agatha` - Pulso SysAdmin y nivel de amenaza actual (Agatha).
+* `/auditoria` - Auditoría incremental sobre memoria episódica y logs (Arthur).
+* `/rag <pregunta>` - Consulta RAG interactiva citando *timestamps* exactos (Arthur).
+* `/marvin` - Ejecución bajo demanda de limpieza segura *Airgap* (Marvin).
+* `/nivel1` - Bitácora estructurada desde `episodic_memory.jsonl`.
 * `/resumen` - Dashboard ejecutivo global de defensas.
-* `/ping` - Verificación rápida de enlace de red.
+* `/baneados` - Muro de la Vergüenza (comandos BOFH interceptados).
+* `/ping` y `/?` - Enlace y manual de operaciones.
 
-*(Nota: Temple incluye un escudo BOFH que interceptará, bloqueará y registrará cualquier intento de comando no autorizado o destructivo).*
+## 🧠 Arthur v2.0: Memoria Episódica y RAG 100% Offline (`arthur.py`)
 
-## 🔮 Agatha: La Precog Principal (Vigilancia) `agatha.py`
-
-Agatha actúa como nuestra centinela. Su misión no es reportar una caída post-mortem, sino predecir el colapso.
-
-- **Observabilidad en Tiempo Real**: Se sumerge directamente en el flujo de logs del Ingress (Nginx).
-
-- **Detección de Anomalías**: Caza patrones críticos de asfixia en la red, específicamente los códigos `499` (conexiones cerradas por el cliente) y bloqueos `50x`.
-
-El módulo de Agatha ha sido reforzado con capacidades de supervivencia base:
-* **Fase de Pre-vuelo:** Antes de iniciar la lectura de métricas de red, valida el estado del nodo y de las réplicas. Si detecta una saturación de disco (>= 95%), invoca de forma autónoma el script de mantenimiento (Marvin) para purgar el almacenamiento y evitar el estado `DiskPressure`.
-* **Filtro de Ruido:** Ignora las peticiones a `favicon.ico` del Nginx para evitar el disparo de falsos positivos en el umbral de amenaza.
-
-- **Matriz de Defensa SRE**:
-    - **Nivel 1 (Autónomo)**: Consulta a Multivac para ejecutar comandos estabilizadores (ej. escalar réplicas) sin intervención humana.
-    - **Nivel 2 (Escalamiento)**: Si el ataque (El Mulo) es de naturaleza exponencial y sobrevive a la auto-remediación, Agatha cede el control a Andrew (SRE) para contención manual (NetworkPolicies, Reinicios).
-
-## 🧠 Arthur: El Analista Histórico (Memoria RAG) `arthur.py`
-
-Bautizado en honor a uno de los gemelos Precog, Arthur evoluciona para convertirse en la memoria a largo plazo del clúster.
-
-- **Inferencia RAG (`/auditoria`)**: Utiliza Generación Aumentada por Recuperación (RAG) para leer la bitácora de eventos (`precogs_audit.log`). Inyecta el contexto en Multivac (LLM) limitando tokens y temperatura para generar diagnósticos semánticos precisos en milisegundos.
-
-- **Control Temporal**: Utiliza un sistema de marcas de tiempo determinista (`.arthur_cursor`) para garantizar que la IA solo procese anomalías nuevas, ahorrando valiosos ciclos de CPU en el Edge.
-
-
-## 📈 Dashiell: El Oráculo de Rendimiento (`dashiell.py`)
-
-El tercer hermano Precog se especializa en la infraestructura física, optimizado para el Edge Computing.
-
-- **Estado en Vivo (`/status`)**: Consulta la API de MicroShift para renderizar un mapa visual (semáforos ASCII) con el estado de los contenedores (Gaia), reinicios y tiempos de actividad.
-
-- **Telemetría Estética (`/perf`)**: Parsea la salida cruda del `metrics-server` de Kubernetes y la convierte en un _dashboard_ interactivo con barras de progreso de CPU y Memoria, proporcionando observabilidad de grado empresarial sin el peso de Grafana.
-
-
-## 🤖 Andrew: El SRE de Trinchera (ChatOps Central)
-
-Bautizado en honor al robot de _El Hombre Bicentenario_, de Isaac Asimov, Andrew combina una interfaz interactiva con la actitud clásica de un _Bastard Operator From Hell_ (BOFH).
-
-- **Métricas de Seguridad Deterministas**:
-    - `/resumen`: Dashboard ejecutivo global de defensas.
-    - `/nivel1`: Bitácora traducida de auto-remediaciones inyectadas por Multivac.
-    - `/baneados`: Muro de la vergüenza con un _Top 10_ de comandos BOFH bloqueados.
-
-- **Intervención Táctica (Nivel 2)**: Despliega botones interactivos (In-Line) para ejecutar bloqueos de red o _rollout restarts_ con un toque.
-
-- **Reportes Post-Mortem**: Envía informes automatizados por correo (SMTP) detallando tiempos de degradación y resoluciones aplicadas tras una crisis.
+Cada incidente resuelto o escalado se persiste en `episodic_memory.jsonl` con su resumen en **ASD-STE100**. Arthur realiza recuperación determinista en Python con expansión bilingüe de sinónimos SRE (`disco <-> disk`, `memoria <-> oom`) y sintetiza respuestas con Multivac sin requerir bases vectoriales pesadas en el Edge.
 
 ## 🚀 Puesta en Marcha
 
-Nuestros agentes comparten dependencias del entorno de asalto. Para iniciar la vigilancia:
-
-**Paso Cero: Parametrizar el Entorno**
-
-*(Obligatorio para que los agentes sepan qué monitorear sin quemar código duro).*
-
 ```bash
-$ cd precogs
-$ cp .env.example .env
-$ vim .env
-```
-+ Asegúrate de configurar los valores dentro del archivo `.env`:
-   * `TELEGRAM_TOKEN` y `TELEGRAM_CHAT_ID` (Para control vía ChatOps).
-   * `KUBECONFIG_PATH` (Ruta al clúster MicroShift).
-   * `SSH_KEY_PATH` (Ruta relativa a la llave de acceso al nodo Edge).
-   * `ADMIN_EMAIL`, `SMTP_SERVER`, `SMTP_PORT`, `SMTP_USER`, y `SMTP_PASSWORD` (Para el envío de reportes Post-Mortem de Nivel 2).
-   * Variables de Arquitectura: Deja intactos `TARGET_FRONTEND` y `TARGET_BACKEND` a menos que modifiques los manifiestos de Kubernetes.
+cd precogs
+cp .env.example .env
+vim .env
 
-1. Desplegar el Metrics Server (Obligatorio para Dashiell)
-> Al estar en un entorno MicroShift, requerimos el motor de métricas parcheado para TLS interno:
-
-```bash
-$ oc apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
-$ oc patch -n kube-system deployment metrics-server --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls"}]'
-```
-
-2. Activar Entorno y Bóveda de Secretos
-
-```bash
-$ cd precogs
-$ source ../chaos/venv/bin/activate
-```
-
-3. Energiza el Templo:
-
-```bash
-$ python3 temple.py
+source ../chaos/venv/bin/activate
+python3 temple.py
 ```
 
 ---
-👤 **Alex (@rootzilopochtli)** *Technical Training Developer en Red Hat | Miembro de Fedora Project | Autor de "Fedora Linux System Administration"*
+👤 **Alex Callejas (`@dark_axl` / `@rootzilopochtli`)** *Technical Training Developer en Red Hat | Líder de Fedora México*

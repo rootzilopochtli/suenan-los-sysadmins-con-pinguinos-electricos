@@ -2,6 +2,7 @@
 # ##################################################################################################################
 # Autor: Alex (@rootzilopochtli)
 # Proyecto: PositronicOps / Operaciones Hail Mary
+# version 2.0: CentOS release
 # Uso: ansible-playbook playbooks/02-deploy-daneel.yml -e "local_ip=$IP local_key=$KEY"
 # ##################################################################################################################
 
@@ -9,7 +10,7 @@
   hosts: localhost
   connection: local
   gather_facts: false
-  become: false
+  become: false      # <--- AGREGAR ESTA LÍNEA
   vars:
     local_pull_secret: "{{ playbook_dir }}/openshift-pull-secret"
   tasks:
@@ -32,7 +33,7 @@
   hosts: localhost
   connection: local
   gather_facts: false
-  become: false
+  become: false      # <--- AGREGAR ESTA LÍNEA
   tasks:
     - name: "Inventario: Registrar nodo Positronico (KVM)"
       add_host:
@@ -60,12 +61,12 @@
     - name: "Facts: Recolectar metadatos manualmente"
       setup:
 
-    - name: "Repositorios: Habilitar canales de MicroShift"
-      rhsm_repository:
-        name:
-          - "rhocp-{{ ocp_version }}-for-rhel-9-x86_64-rpms"
-          - "fast-datapath-for-rhel-9-x86_64-rpms"
-        state: enabled
+    - name: "Repositorios: Configurar repositorio completo (MicroShift + Dependencias)"
+      shell: "curl -s https://microshift-io.github.io/microshift/quickrpm.sh | bash"
+      environment:
+        OWNER: "microshift-io"
+        # ¡Descomentamos esta línea para forzar la compatibilidad de dependencias!
+        TAG: "4.22.0_202610071017_g0a516b4eb_4.22.0_okd_scos.ec.16"
 
     - name: 💾 Preparar Storage Dedicado para Términus (Base de Datos)
       block:
@@ -84,7 +85,7 @@
           community.general.lvol:
             vg: vg_data
             lv: lv_terminus
-            size: 100%FREE
+            size: 100%VG
 
         - name: Formatear volumen en XFS
           community.general.filesystem:

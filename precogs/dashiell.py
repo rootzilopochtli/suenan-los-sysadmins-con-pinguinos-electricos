@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 KUBECONFIG = os.path.expanduser(os.getenv("KUBECONFIG_PATH", ""))
-NODE_IP = os.getenv("NODE_IP", "")
+NODE_IP = os.getenv("NODE_IP", "192.168.122.155")
 SSH_KEY = os.path.expanduser(os.getenv("SSH_KEY_PATH", "../magrathea/labkey"))
 
 def generar_barra(porcentaje, longitud=10):
@@ -22,17 +22,28 @@ def obtener_disco():
         return "[❓] N/A"
     try:
         cmd = [
-            "ssh", "-i", SSH_KEY, "-o", "StrictHostKeyChecking=no",
-            f"positronic-user@{NODE_IP}", "df -h / | awk 'NR==2 {print $5}'"
+            "ssh", "-q", "-n", "-i", SSH_KEY, "-o", "StrictHostKeyChecking=no",
+            "-o", "GSSAPIAuthentication=no", "-o", "ConnectTimeout=5",
+            f"positronic-user@{NODE_IP}", "df -h /"
         ]
-        out = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout.strip()
-        return generar_barra(out)
-    except Exception:
-        return "[❓] Err"
+        # Ejecuta el comando crudo y separa la salida por líneas
+        resultado = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout.strip().split('\n')
+
+        # Aísla la última línea y extrae la columna que contiene el símbolo '%'
+        porcentaje = [item for item in resultado[-1].split() if '%' in item][0]
+
+        return generar_barra(porcentaje)
+    except Exception as e:
+        # Mostramos el error real en Telegram en lugar de un "Err" genérico
+        return f"[❓] Err: {e}"
 
 def obtener_rendimiento():
     reporte = "📈 *Rendimiento del Clúster (MicroShift)*\n\n*Infraestructura Base:*\n"
+
+    # Extraemos el disco primero para que no dependa de las métricas de K8s
     disco_bar = obtener_disco()
+
+    # Bloque aislado para CPU/RAM de los nodos
     try:
         out_nodos = subprocess.run(
             ["oc", "--kubeconfig", KUBECONFIG, "adm", "top", "nodes", "--no-headers"],
@@ -51,6 +62,7 @@ def obtener_rendimiento():
         reporte += f"🖥️ `{NODE_IP}`\n  🧠 CPU:   `[❓] N/A`\n  💾 RAM:   `[❓] N/A`\n  💽 DISCO: `{disco_bar}`\n"
         reporte += f"⚠️ _Métricas de CPU/RAM aún no disponibles: {e.stderr.strip()}_ \n\n"
 
+    # Bloque aislado para CPU/RAM de los pods
     reporte += "*Despliegues (Namespace: default):*\n"
     try:
         out_pods = subprocess.run(
@@ -104,4 +116,3 @@ def obtener_estado_pods():
         return f"❌ [Dashiell] Falla al consultar el clúster:\n```text\n{e.stderr}\n```"
     except FileNotFoundError:
         return "❌ [Dashiell] Comando 'oc' no encontrado."
-
