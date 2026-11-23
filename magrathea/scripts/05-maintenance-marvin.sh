@@ -2,54 +2,56 @@
 ###############################################################################
 # Autor: Alex Callejas (@rootzilopochtli)
 # Proyecto: PositronicOps
+# Versión 2.0: CentOS Stream 10 / Airgap-Safe
 # Descripción: Marvin - Script de mantenimiento y recolección de basura
-# Motto: "Here I am, brain the size of a planet, and they ask me to clean the disk..."
 ###############################################################################
 
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m'
-
-# Validación de seguridad: Asegura que la variable heredada exista
-if [ -z "$NODE_IP" ]; then
-    echo -e "${RED}Error: La variable \$NODE_IP no está definida.${NC}"
-    echo -e "Ejecuta 'export NODE_IP=tu_ip' antes de invocar a Marvin."
-    exit 1
-fi
-
-# Resolución dinámica de la ruta para la llave SSH
+# 1. Resolver IP y llave SSH respetando variables heredadas de Agatha/.env
+NODE_IP="${NODE_IP:-192.168.122.32}"
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-SSH_KEY="${SCRIPT_DIR}/../labkey"
-USER="positronic-user"
+SSH_KEY_PATH="${SSH_KEY_PATH:-${SCRIPT_DIR}/../labkey}"
 
-echo -e "${YELLOW}##########################################################${NC}"
-echo -e "${YELLOW}#   MARVIN: Iniciando protocolo de recolección de basura #${NC}"
-echo -e "${YELLOW}##########################################################${NC}"
-echo -e "Conectando al nodo positrónico en $NODE_IP...\n"
+echo "##########################################################"
+echo "#   MARVIN: Iniciando protocolo de recolección de basura #"
+echo "##########################################################"
+echo "Conectando al nodo positrónico en ${NODE_IP}..."
 
-ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$USER@$NODE_IP" << 'EOF'
-    echo -e "1. Purgando artefactos huérfanos de Podman..."
-    sudo podman system prune -f > /dev/null 2>&1
+# 2. Ejecutar limpieza no interactiva vía SSH (falla rápido si hay error de red/llave)
+ssh -i "${SSH_KEY_PATH}" \
+    -o BatchMode=yes \
+    -o ConnectTimeout=5 \
+    -o StrictHostKeyChecking=no \
+    -o GSSAPIAuthentication=no \
+    "positronic-user@${NODE_IP}" << 'EOF'
+  echo ""
+  echo "1. Purgando artefactos huérfanos de Podman (conservando imágenes etiquetadas)..."
+  sudo podman system prune -f
 
-    echo -e "2. Limpiando imágenes sin uso en CRI-O..."
-    sudo crictl rmi --prune > /dev/null 2>&1
+  echo "2. Vaciando bitácoras del sistema (Journald máx. 50M)..."
+  sudo journalctl --vacuum-size=50M
 
-    echo -e "3. Vaciando bitácoras antiguas del sistema (Journald)..."
-    sudo journalctl --vacuum-size=50M > /dev/null 2>&1
+  echo "3. Limpiando caché de paquetes dnf..."
+  sudo dnf clean all
 
-    echo -e "4. Limpiando caché de paquetes dnf..."
-    sudo dnf clean all > /dev/null 2>&1
+  echo "4. Limpiando y truncando logs masivos de MicroShift (API Server y Pods)..."
+  for dir in /var/log/kube-apiserver /var/log/pods; do
+    if [ -d "$dir" ]; then
+      sudo find "$dir" -type f \( -name "*.log.*" -o -name "*.gz" \) -delete 2>/dev/null
+      sudo find "$dir" -type f -name "*.log" -exec truncate -s 0 {} + 2>/dev/null
+    fi
+  done
 
-    echo -e "5. Truncando logs masivos de MicroShift (API Server y Pods)..."
-    # Elimina logs rotados/comprimidos antiguos
-    sudo find /var/log/kube-apiserver/ /var/log/pods/ -type f -name "*.log.*" -delete > /dev/null 2>&1
-    sudo find /var/log/kube-apiserver/ /var/log/pods/ -type f -name "*.gz" -delete > /dev/null 2>&1
-    # Vacía los logs activos a cero bytes sin romper el descriptor de archivo
-    sudo find /var/log/kube-apiserver/ /var/log/pods/ -type f -name "*.log" -exec truncate -s 0 {} + > /dev/null 2>&1
-
-    echo -e "\nEstado actual del almacenamiento (/):"
-    df -h /
+  echo ""
+  echo "Estado actual del almacenamiento (/):"
+  df -h /
 EOF
 
-echo -e "\n${GREEN}[OK] Marvin ha terminado. El nodo está listo para el estrés.${NC}"
+SSH_RC=$?
+if [ $SSH_RC -ne 0 ]; then
+  echo ""
+  echo "[ERROR] Marvin no pudo completar el mantenimiento en ${NODE_IP} (SSH exit: ${SSH_RC})." >&2
+  exit $SSH_RC
+fi
+
+echo ""
+echo "[OK] Marvin ha terminado. El nodo está listo para el estrés."

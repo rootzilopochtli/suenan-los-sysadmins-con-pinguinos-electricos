@@ -35,3 +35,7 @@ __pycache__/
 .venv/
 venv/
 .env
+# Memoria episódica y cursor de Arthur (v2.0)
+episodic_memory.jsonl
+.arthur_cursor
+*.tar.gz

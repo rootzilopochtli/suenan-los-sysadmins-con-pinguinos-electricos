@@ -1,4 +1,5 @@
 ---
+# 1. La Granja de Procesamiento (El Backend)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -6,7 +7,7 @@ metadata:
   labels:
     app: gaia-backend
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: gaia-backend
@@ -18,9 +19,25 @@ spec:
       containers:
         - name: fastapi
           image: localhost/gaia-backend:v1
-          imagePullPolicy: Never
+          imagePullPolicy: Never  # Usa la imagen precargada localmente (modo Airgap/Edge)
           ports:
             - containerPort: 8000
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /status/db
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
           env:
             - name: DB_USER
               valueFrom:
@@ -48,6 +65,7 @@ spec:
               cpu: "250m"
 
 ---
+# 2. El Servicio Interno
 apiVersion: v1
 kind: Service
 metadata:
@@ -61,3 +79,24 @@ spec:
       targetPort: 8000
   selector:
     app: gaia-backend
+
+---
+# 3. HPA Interno (Nivel 0 - Auto-escalado reactivo)
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: gaia-backend-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: gaia-backend
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 75
